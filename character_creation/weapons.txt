@@ -1,0 +1,20 @@
+Dagger
+Rapier
+Katana
+Claymore
+Zweihander
+Longsword
+Glaive
+Halberd
+Dane Ax
+Scythe
+Shotel
+Sickle
+Spear
+Mace
+Flail
+Bow
+Crossbow
+Warhammer
+Saber 
+Estoc

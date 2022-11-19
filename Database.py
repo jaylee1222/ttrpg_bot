@@ -1,4 +1,5 @@
 # import sqlite3
+from datetime import datetime
 import sqlalchemy as db
 from Player import Player
 from Character import Character
@@ -14,6 +15,7 @@ def database_connection(person, character):
     characters = db.Table(
         "Characters", mymetadata,
         db.Column("char_id", db.Integer, primary_key=True),
+        db.Column("time_created", db.DateTime),
         db.Column("char_name", db.String(25)),
         db.Column("first_class", db.String(25)),
         db.Column("second_class", db.String(25)),
@@ -44,7 +46,7 @@ def database_connection(person, character):
     print(vars(character))
     players_ins = players.insert()
     characters_ins = characters.insert()
-    characters_ins = characters.insert().values(char_name = character.char_name, first_class = character.first_class, second_class = character.second_class, weapon = character.weapon, weapon_element = character.weapon_element, armor = character.armor, personality = traits, occupation = character.occupation, aspiration = character.aspiration)
+    characters_ins = characters.insert().values(time_created = datetime.now(), char_name = character.char_name, first_class = character.first_class, second_class = character.second_class, weapon = character.weapon, weapon_element = character.weapon_element, armor = character.armor, personality = traits, occupation = character.occupation, aspiration = character.aspiration)
     result = connection.execute(characters_ins)
     print(result)
     character_id = result.inserted_primary_key._asdict()

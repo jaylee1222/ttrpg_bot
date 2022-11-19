@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Integer, ForeignKey, Table
+from sqlalchemy import Column, String, Integer, ForeignKey, DateTime
 from sqlalchemy.orm import relationship, backref
 
 from sqlalchemy.ext.declarative import declarative_base
@@ -8,6 +8,7 @@ Base = declarative_base()
 class Character(Base):
     __tablename__ = "Characters"
     char_id = Column(Integer, primary_key=True)
+    time_created = Column(DateTime)
     char_name = Column(String(25))
     disc_name = Column(Integer, ForeignKey('Players.player_id'))
     first_class = Column(String(25))

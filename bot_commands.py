@@ -220,4 +220,4 @@ async def get_members(ctx):
     
     pass
 
-client.run(<discord_bot>)
+client.run('discord_token')

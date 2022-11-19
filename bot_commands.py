@@ -12,6 +12,8 @@ from Player import Player
 
 class MyClient(commands.Bot, discord.Client):
     def __init__(self):
+        load_dotenv()
+        self.DISCORD_TOKEN = os.environ.get("DISCORD_TOKEN")
         intents = discord.Intents.default()
         intents.message_content = True
 
@@ -220,4 +222,4 @@ async def get_members(ctx):
     
     pass
 
-client.run(<discord_bot>)
+client.run(client.DISCORD_TOKEN)

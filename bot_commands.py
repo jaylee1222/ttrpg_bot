@@ -206,6 +206,10 @@ async def party_create_characters(ctx):
     members = await get_members(ctx)
     for member in members:
         await create_character(ctx)
+    if (len(members) > 1):
+        await ctx.send(f"Ok delvers. It's time to take on your first challenge!")
+    else:
+        await ctx.send(f"Ok, delver. You must be pretty brave to take on this challenge alone. It's time for your first challenge.")
 
 @client.command(name="getMembers")
 async def get_members(ctx):

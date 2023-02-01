@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 import discord
 from discord.ext import commands
 import asyncio
+from DiscordUtilities import get_channel
 from CharacterCreation import get_name_response, get_weapon_response, generate_character_traits, generate_personality
 from Database import database_connection
 from Character import Character
@@ -189,7 +190,19 @@ async def create_character(ctx):
     c1 = Character(char_name = characterName, first_class = firstClass, second_class = secondClass, weapon = weaponChoice, weapon_element = weaponElementChoice, armor = armorChoice, personality = personalityChoice, occupation = occupationChoice, aspiration = aspirationChoice)
     p1 = Player(disc_name = disc_name, char_id = c1.char_id)
     database_connection(p1, c1)
-
+    await create_channel(ctx, c1.char_name)
+    channel = await get_channel(ctx, client, "text", c1.char_name)
+    print(channel.name)
+    await channel.send(
+        f"character name: {c1.char_name}\n" + 
+        f"first class: {c1.first_class}\n" + 
+        f"second class: {c1.second_class}\n" + 
+        f"weapon: {c1.weapon}\n" +
+        f"weapon element: {c1.weapon_element}\n" +
+        f"armor: {c1.armor}\n" + 
+        f"personality: {c1.personality[0]}, {c1.personality[1]}, {c1.personality[2]}\n" +
+        f"occupation: {c1.occupation}\n" +
+        f"aspiration: {c1.aspiration}")
     
     pass
 

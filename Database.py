@@ -9,7 +9,6 @@ from sqlalchemy import select
 def database_connection(person, character):
     engine = db.create_engine('sqlite:///ttrpg_bot.db', echo = True)
     connection = engine.connect()
-    print(type(character.personality))
     mymetadata = db.MetaData()
     Base = db.ext.declarative.declarative_base(metadata=mymetadata)
     characters = db.Table(

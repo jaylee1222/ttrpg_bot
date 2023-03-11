@@ -5,8 +5,9 @@ from Player import Player
 from Character import Character
 from sqlalchemy import inspect
 from sqlalchemy import select
+from sqlalchemy import insert
 
-def database_connection(person, character):
+def database_connection():
     engine = db.create_engine('sqlite:///ttrpg_bot.db', echo = True)
     connection = engine.connect()
     mymetadata = db.MetaData()
@@ -32,24 +33,23 @@ def database_connection(person, character):
         db.Column("disc_name", db.Integer()),
         db.Column("char_id", db.Integer, db.ForeignKey("Characters.char_id"))
     )
-    traits = ', '.join(character.personality)
-    insp = inspect(Player)
-    insp2 = inspect(Character)
-    print(insp.all_orm_descriptors.keys())
-    print(insp2.all_orm_descriptors.keys())
-    print(Base.metadata)
-    print(Player.__table__)
-    print(Character.__table__)
     mymetadata.create_all(engine, checkfirst= True)
-    print(vars(person))
-    print(vars(character))
     players_ins = players.insert()
     characters_ins = characters.insert()
-    characters_ins = characters.insert().values(time_created = datetime.now(), char_name = character.char_name, first_class = character.first_class, second_class = character.second_class, weapon = character.weapon, weapon_element = character.weapon_element, armor = character.armor, personality = traits, occupation = character.occupation, aspiration = character.aspiration)
+
+    return engine
+
+def insert(person, character):
+    traits = ', '.join(character.personality)
+    engine = database_connection()
+    metadata = db.MetaData
+    characters = characters_object.__tablename__
+    players = players_object.__tablename__
+    characters_ins = insert(characters).values(time_created = datetime.now(), char_name = character.char_name, first_class = character.first_class, second_class = character.second_class, weapon = character.weapon, weapon_element = character.weapon_element, armor = character.armor, personality = traits, occupation = character.occupation, aspiration = character.aspiration)
     result = connection.execute(characters_ins)
     print(result)
     character_id = result.inserted_primary_key._asdict()
-    players_ins = players.insert().values(disc_name = person.disc_name, char_id = character_id['char_id'])
+    players_ins = insert(players).values(disc_name = person.disc_name, char_id = character_id['char_id'])
     result = connection.execute(players_ins)
     print(result)
 
@@ -58,3 +58,4 @@ def database_connection(person, character):
 
     for row in result:
         print (row)
+    connection.close()

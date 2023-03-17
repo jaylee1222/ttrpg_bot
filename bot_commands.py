@@ -189,8 +189,8 @@ async def create_character(ctx):
 
     c1 = Character(char_name = characterName, first_class = firstClass, second_class = secondClass, weapon = weaponChoice, weapon_element = weaponElementChoice, armor = armorChoice, personality = personalityChoice, occupation = occupationChoice, aspiration = aspirationChoice)
     p1 = Player(disc_name = disc_name, char_id = c1.char_id)
-    insert(p1, c1)
-    # database_connection(p1, c1)
+    result = insert(p1, c1)
+    print(result)
     await create_channel(ctx, c1.char_name)
     channel = await get_channel(ctx, client, "text", c1.char_name)
     print(channel.name)

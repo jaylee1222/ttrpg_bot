@@ -55,8 +55,4 @@ def insert(person, character):
     result = engine.execute(players_ins)
     print(result)
 
-    s = select([players, characters]).where(players.c.char_id == characters.c.char_id)
-    result = engine.execute(s)
-
-    for row in result:
-        print (row)
+    return result

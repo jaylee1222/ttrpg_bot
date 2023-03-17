@@ -7,7 +7,7 @@ from discord.ext import commands
 import asyncio
 from DiscordUtilities import get_channel
 from CharacterCreation import get_name_response, get_weapon_response, generate_character_traits, generate_personality
-from Database import database_connection
+from Database import database_connection, insert
 from Character import Character
 from Player import Player
 
@@ -189,7 +189,8 @@ async def create_character(ctx):
 
     c1 = Character(char_name = characterName, first_class = firstClass, second_class = secondClass, weapon = weaponChoice, weapon_element = weaponElementChoice, armor = armorChoice, personality = personalityChoice, occupation = occupationChoice, aspiration = aspirationChoice)
     p1 = Player(disc_name = disc_name, char_id = c1.char_id)
-    database_connection(p1, c1)
+    result = insert(p1, c1)
+    print(result)
     await create_channel(ctx, c1.char_name)
     channel = await get_channel(ctx, client, "text", c1.char_name)
     print(channel.name)
@@ -206,6 +207,10 @@ async def create_character(ctx):
     
     pass
 
+@client.command()
+async def load_character(ctx):
+    print(ctx.author)
+    pass
 
 @client.command()
 async def create_channel(ctx, channel_name):
@@ -223,11 +228,10 @@ async def party_create_characters(ctx):
         await ctx.send(f"Ok delvers. It's time to take on your first challenge!")
     else:
         await ctx.send(f"Ok, delver. You must be pretty brave to take on this challenge alone. It's time for your first challenge.")
+    pass
 
 @client.command(name="getMembers")
 async def get_members(ctx):
-    print(type(client))
-    print(type(ctx))
     for channel in ctx.guild.voice_channels:
         print(channel.id and channel.name)
         if channel.name == "the-tavern":

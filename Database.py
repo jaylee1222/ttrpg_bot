@@ -9,7 +9,7 @@ from sqlalchemy import insert
 
 def database_connection():
     engine = db.create_engine('sqlite:///ttrpg_bot.db', echo = True)
-    connection = engine.connect()
+    connection = engine.connect(close_with_result=True)
     mymetadata = db.MetaData()
     Base = db.ext.declarative.declarative_base(metadata=mymetadata)
     characters = db.Table(
@@ -42,20 +42,21 @@ def database_connection():
 def insert(person, character):
     traits = ', '.join(character.personality)
     engine = database_connection()
-    metadata = db.MetaData
-    characters = characters_object.__tablename__
-    players = players_object.__tablename__
-    characters_ins = insert(characters).values(time_created = datetime.now(), char_name = character.char_name, first_class = character.first_class, second_class = character.second_class, weapon = character.weapon, weapon_element = character.weapon_element, armor = character.armor, personality = traits, occupation = character.occupation, aspiration = character.aspiration)
-    result = connection.execute(characters_ins)
+    metadata = db.MetaData(bind=engine)
+    db.MetaData.reflect(metadata)
+    characters = metadata.tables['Characters']
+    players = metadata.tables['Players']
+    print(type(characters))
+    characters_ins = db.insert(characters).values(time_created = datetime.now(), char_name = character.char_name, first_class = character.first_class, second_class = character.second_class, weapon = character.weapon, weapon_element = character.weapon_element, armor = character.armor, personality = traits, occupation = character.occupation, aspiration = character.aspiration)
+    result = engine.execute(characters_ins)
     print(result)
     character_id = result.inserted_primary_key._asdict()
-    players_ins = insert(players).values(disc_name = person.disc_name, char_id = character_id['char_id'])
-    result = connection.execute(players_ins)
+    players_ins = db.insert(players).values(disc_name = person.disc_name, char_id = character_id['char_id'])
+    result = engine.execute(players_ins)
     print(result)
 
     s = select([players, characters]).where(players.c.char_id == characters.c.char_id)
-    result = connection.execute(s)
+    result = engine.execute(s)
 
     for row in result:
         print (row)
-    connection.close()

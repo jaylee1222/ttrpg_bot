@@ -1,15 +1,18 @@
 #!/usr/local/bin/python3
 import os
-import string
 from dotenv import load_dotenv
 import discord
 from discord.ext import commands
-import asyncio
 from DiscordUtilities import get_channel
 from CharacterCreation import get_name_response, get_weapon_response, generate_character_traits, generate_personality
-from Database import database_connection, insert
-from Character import Character
-from Player import Player
+from Database import insert, select_characters, load_selected_character
+from DatabaseTables import Player, Character
+
+class PlayerCharacter():
+    def __init__(self, player_name, character_name):
+        self.player_name = player_name
+        self.character_name = character_name
+        pass
 
 class MyClient(commands.Bot, discord.Client):
     def __init__(self):
@@ -17,30 +20,13 @@ class MyClient(commands.Bot, discord.Client):
         self.DISCORD_TOKEN = os.environ.get("DISCORD_TOKEN")
         intents = discord.Intents.default()
         intents.message_content = True
+        self.characters = []
 
         super().__init__(command_prefix=commands.when_mentioned_or('$'), intents=intents)
 
     async def on_ready(self):
         print(f'Logged on as {self.user}!')
 
-    # async def on_message(self, message):
-    #     print(f'Message from {message.author}: {message.content}')
-    #     if message.author.id == self.user.id:
-    #         return
-    #     if message.channel.name != 'discord-bot-test':
-    #         return
-
-    #     if message.content.startswith('$createCharacter'):
-    #         await message.channel.send('Greetings traveller! What is your name?')
-
-
-            # try:
-            #     guess = await self.wait_for('message', check=is_correct, timeout=5.0)
-            # except asyncio.TimeoutError:
-            #     return await message.channel.send(f'Sorry, you took too long it was {answer}.')
-
-
-# client = commands.Bot(command_prefix='$', intents=intents)
 client = MyClient()
 
 @client.command(name="createCharacter")
@@ -120,7 +106,7 @@ async def create_character(ctx):
     pass
 
 @client.command(name="fastCreateCharacter")
-async def create_character(ctx):
+async def fast_create_character(ctx):
     weaponList = None
     weaponElementList = None
     classList = None
@@ -171,9 +157,7 @@ async def create_character(ctx):
     aspirationChoice = await generate_character_traits(aspirationList)
     split_choice = aspirationChoice.split()
     shortened_aspiration = split_choice[0].replace(".", "")
-    disc_name = str(ctx.message.author)
-    print(ctx.message.author)
-    print(type(ctx.message.author))
+    discord_name = str(ctx.message.author)
     await ctx.send(f"Great to meet ya, {characterName}! Let’s get you set up shall we? This process is called Evocation." + 
     f" To keep it simple, I’ll bring out from you your Delving self from your Spark, the Bits that gave you life. Here we go.\n\n" + 
     
@@ -186,30 +170,71 @@ async def create_character(ctx):
     f" We all yearn for something. I hope you find yours.\n\n" + 
 
     f"Good luck out there. Don’t die okay?")
-
-    c1 = Character(char_name = characterName, first_class = firstClass, second_class = secondClass, weapon = weaponChoice, weapon_element = weaponElementChoice, armor = armorChoice, personality = personalityChoice, occupation = occupationChoice, aspiration = aspirationChoice)
-    p1 = Player(disc_name = disc_name, char_id = c1.char_id)
-    result = insert(p1, c1)
-    print(result)
-    await create_channel(ctx, c1.char_name)
-    channel = await get_channel(ctx, client, "text", c1.char_name)
-    print(channel.name)
+    c1 = []
+    c1.append(characterName)
+    c1.append(discord_name)
+    c1.append(firstClass)
+    c1.append(secondClass)
+    c1.append(weaponChoice)
+    c1.append(weaponElementChoice)
+    c1.append(armorChoice)
+    c1.append(personalityChoice)
+    c1.append(occupationChoice)
+    c1.append(aspirationChoice)
+    p1 = []
+    p1.append(discord_name)
+    insert(p1, c1)
+    await create_channel(ctx, characterName)
+    channel = await get_channel(ctx, client, "text", characterName)
+    new_character = PlayerCharacter(discord_name, characterName)
+    client.characters.append(new_character)
     await channel.send(
-        f"character name: {c1.char_name}\n" + 
-        f"first class: {c1.first_class}\n" + 
-        f"second class: {c1.second_class}\n" + 
-        f"weapon: {c1.weapon}\n" +
-        f"weapon element: {c1.weapon_element}\n" +
-        f"armor: {c1.armor}\n" + 
-        f"personality: {c1.personality[0]}, {c1.personality[1]}, {c1.personality[2]}\n" +
-        f"occupation: {c1.occupation}\n" +
-        f"aspiration: {c1.aspiration}")
-    
+        f"character name: {c1[0]}\n" + 
+        f"first class: {c1[2]}\n" + 
+        f"second class: {c1[3]}\n" + 
+        f"weapon: {c1[4]}\n" +
+        f"weapon element: {c1[5]}\n" +
+        f"armor: {c1[6]}\n" + 
+        f"personality: {c1[7][0]}, {c1[7][1]}, {c1[7][2]}\n" +
+        f"occupation: {c1[8]}\n" +
+        f"aspiration: {c1[9]}")
     pass
 
 @client.command()
-async def load_character(ctx):
-    print(ctx.author)
+async def load_character_options(ctx):
+    choices = []
+    disc_name = str(ctx.message.author)
+    characters = select_characters(disc_name)
+    await ctx.send(f"Oi, you've played before would you like to use one of your characters? Here are your choices:")
+    for character in characters:
+        choices.append(character[0].char_name)
+    await ctx.send('\n'.join(choices))
+    pass
+
+@client.command()
+async def load_character(ctx, *, arg):
+    disc_name = str(ctx.message.author)
+    character = await load_selected_character(arg, disc_name)
+    print(type(character))
+    character = character[0]
+    for attribute, value in character.__dict__.items():
+        print(value)
+    await ctx.send(f"You have loaded {character.char_name}")
+    await create_channel(ctx, character.char_name)
+    channel = await get_channel(ctx, client, "text", character.char_name)
+    print(channel.name)
+    new_character = PlayerCharacter(disc_name, character.char_name)
+    client.characters.append(new_character)
+    await channel.send(
+        f"character name: {character.char_name}\n" + 
+        f"first class: {character.first_class}\n" + 
+        f"second class: {character.second_class}\n" + 
+        f"weapon: {character.weapon}\n" +
+        f"weapon element: {character.weapon_element}\n" +
+        f"armor: {character.armor}\n" + 
+        f"personality: {character.personality}\n" +
+        f"occupation: {character.occupation}\n" +
+        f"aspiration: {character.aspiration}")
     pass
 
 @client.command()
@@ -218,6 +243,14 @@ async def create_channel(ctx, channel_name):
     channel = await guild.create_text_channel(channel_name)
 
     pass
+
+@client.command(name="endSession")
+async def end_session(ctx):
+    for char in client.characters:
+        channel = await get_channel(ctx, client, "text", char.character_name)
+        await channel.delete()
+    client.characters.clear()
+    await ctx.send("Thank you for playing!")
 
 @client.command(name="partyCreate")
 async def party_create_characters(ctx):

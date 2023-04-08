@@ -1,58 +1,49 @@
 # import sqlite3
 from datetime import datetime
 import sqlalchemy as db
-from Player import Player
-from Character import Character
-from sqlalchemy import inspect
-from sqlalchemy import select
-from sqlalchemy import insert
+from DatabaseTables import Player, Character
+from sqlalchemy import inspect, select, insert, create_engine, MetaData, and_
+from sqlalchemy.orm import Session
 
 def database_connection():
-    engine = db.create_engine('sqlite:///ttrpg_bot.db', echo = True)
-    connection = engine.connect(close_with_result=True)
-    mymetadata = db.MetaData()
-    Base = db.ext.declarative.declarative_base(metadata=mymetadata)
-    characters = db.Table(
-        "Characters", mymetadata,
-        db.Column("char_id", db.Integer, primary_key=True),
-        db.Column("time_created", db.DateTime),
-        db.Column("char_name", db.String(25)),
-        db.Column("first_class", db.String(25)),
-        db.Column("second_class", db.String(25)),
-        db.Column("weapon", db.String(25)),
-        db.Column("weapon_element", db.String(25)),
-        db.Column("armor", db.String(25)),
-        db.Column("personality", db.String(50)),
-        db.Column("occupation", db.String(25)),
-        db.Column("aspiration", db.String(50))
-    )
-
-    players = db.Table(
-        "Players", mymetadata,
-        db.Column("player_id", db.Integer, primary_key=True),
-        db.Column("disc_name", db.Integer()),
-        db.Column("char_id", db.Integer, db.ForeignKey("Characters.char_id"))
-    )
-    mymetadata.create_all(engine, checkfirst= True)
-    players_ins = players.insert()
-    characters_ins = characters.insert()
+    engine = create_engine('sqlite:///ttrpg_bot.db', echo = True)
+    Player.__table__.create(engine, checkfirst=True)
+    Character.__table__.create(engine, checkfirst=True)
 
     return engine
 
 def insert(person, character):
-    traits = ', '.join(character.personality)
+    traits = ', '.join(character[7])
     engine = database_connection()
-    metadata = db.MetaData(bind=engine)
-    db.MetaData.reflect(metadata)
-    characters = metadata.tables['Characters']
-    players = metadata.tables['Players']
-    print(type(characters))
-    characters_ins = db.insert(characters).values(time_created = datetime.now(), char_name = character.char_name, first_class = character.first_class, second_class = character.second_class, weapon = character.weapon, weapon_element = character.weapon_element, armor = character.armor, personality = traits, occupation = character.occupation, aspiration = character.aspiration)
-    result = engine.execute(characters_ins)
-    print(result)
-    character_id = result.inserted_primary_key._asdict()
-    players_ins = db.insert(players).values(disc_name = person.disc_name, char_id = character_id['char_id'])
-    result = engine.execute(players_ins)
-    print(result)
+    characterModel = Character(time_created = datetime.now(), char_name = character[0], first_class=character[2], second_class=character[3], weapon=character[4], weapon_element=character[5], armor=character[6], personality=traits, occupation=character[8], aspiration=character[9])
+    with Session(engine) as session:
+        result = session.add(characterModel)
+        session.commit()
+        session.refresh(characterModel)
+        print(f"id of the inserted row is {characterModel.char_id}")
+    playerModel = Player(disc_name=person[0], character=characterModel.char_id)
+    with Session(engine) as session:
+        session.add(playerModel)
+        session.commit()
 
-    return result
+def select_characters(player):
+    engine = database_connection()
+    player_chars = []
+    session = Session(engine)
+    ids = select(Player).where(Player.disc_name == player)
+    for id in session.scalars(ids):
+        chars = select(Character).where(Character.char_id == id.player_id)
+        char_info = session.execute(chars).fetchone()
+        player_chars.append(char_info)
+    return player_chars
+
+async def load_selected_character(desired_char_name, player):
+    engine = database_connection()
+    statement = select(Character).where(Character.char_name == desired_char_name)
+    with Session(engine) as session:
+        char_info = session.execute(statement).fetchone()
+        ids = select(Player).where(and_(Player.disc_name == player, Player.character == char_info[0].char_id))
+        result = session.execute(ids)
+        if result != None:
+            print(f"this is from database: {type(char_info)}")
+            return char_info

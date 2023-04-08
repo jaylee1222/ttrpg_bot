@@ -1,5 +1,3 @@
-from Database import database_connection
-
 async def get_channel(ctx, client, channel_type, channel_name):
     if channel_type == "voice":
         for channel in ctx.guild.voice_channels:

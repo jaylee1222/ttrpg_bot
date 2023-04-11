@@ -7,17 +7,31 @@ from DiscordUtilities import get_channel
 from CharacterCreation import get_name_response, get_weapon_response, generate_character_traits, generate_personality
 from Database import insert, select_characters, load_selected_character
 from DatabaseTables import Player, Character
+# import requests
 
+# base_url = "https://discord.com/oauth2/token"
+# scope = "bot"
 class PlayerCharacter():
     def __init__(self, player_name, character_name):
         self.player_name = player_name
         self.character_name = character_name
         pass
 
+# class Token():
+#     def __init__(self):
+#         load_dotenv()
+#         self.client_id = os.environ.get("CLIENT_ID")
+#         self.permissions = os.environ.get("PERMISSIONS")
+#         self.discord_token = os.environ.get("DISCORD_TOKEN")
+#         request = requests.post(f"{base_url}client_id={self.client_id}&permissions={self.permissions}&scope={scope}").json()
+#         print(request['access_token'])
+#         self.token = request.access_tokens
+
 class MyClient(commands.Bot, discord.Client):
     def __init__(self):
         load_dotenv()
         self.DISCORD_TOKEN = os.environ.get("DISCORD_TOKEN")
+        # self.DISCORD_TOKEN = Token().token
         intents = discord.Intents.default()
         intents.message_content = True
         self.characters = []
@@ -277,4 +291,3 @@ async def get_members(ctx):
     pass
 
 client.run(client.DISCORD_TOKEN)
-

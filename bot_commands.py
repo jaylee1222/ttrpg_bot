@@ -303,10 +303,6 @@ async def create_dungeon(ctx):
 @client.command()
 async def first_room(ctx):
     dungeon = client.dungeons[len(client.dungeons) - 1]
-    dungeon.room_mons[0] = 0
-    dungeon.room_mons[1] = 0
-    dungeon.room_mons[2] = 0
-    dungeon.room_mons[3] = 0
     is_all_dead = False
     is_all_dead = all([ v == 0 for v in dungeon.room_mons ])
     if is_all_dead:

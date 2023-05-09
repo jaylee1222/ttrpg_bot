@@ -6,7 +6,9 @@ from discord.ext import commands
 from DiscordUtilities import get_channel
 from CharacterCreation import get_name_response, get_weapon_response, generate_character_traits, generate_personality
 from Database import insert, select_characters, load_selected_character
-from DatabaseTables import Player, Character
+from models.DatabaseTables import Player, Character
+from models.Dungeon import Dungeon
+from monster_factory import create_list_monsters, create_single_monster
 # import requests
 
 # base_url = "https://discord.com/oauth2/token"
@@ -35,6 +37,7 @@ class MyClient(commands.Bot, discord.Client):
         intents = discord.Intents.default()
         intents.message_content = True
         self.characters = []
+        self.dungeons = []
 
         super().__init__(command_prefix=commands.when_mentioned_or('$'), intents=intents)
 
@@ -255,7 +258,6 @@ async def load_character(ctx, *, arg):
 async def create_channel(ctx, channel_name):
     guild = ctx.guild
     channel = await guild.create_text_channel(channel_name)
-
     pass
 
 @client.command(name="endSession")
@@ -289,5 +291,38 @@ async def get_members(ctx):
             return members
     
     pass
+
+@client.command()
+async def create_dungeon(ctx):
+    dungeon = Dungeon(4)
+    dungeon.room_mons = dungeon.populate_dungeon()
+    client.dungeons.append(dungeon)
+    await ctx.send(f"the first dungeon is {dungeon.biome}, each room will have this number of monsters: {dungeon.room_mons[0]}, {dungeon.room_mons[1]}, {dungeon.room_mons[2]}, {dungeon.room_mons[3]} and the size is {dungeon.size}")
+    pass
+
+@client.command()
+async def first_room(ctx):
+    dungeon = client.dungeons[len(client.dungeons) - 1]
+    is_all_dead = False
+    is_all_dead = all([ v == 0 for v in dungeon.room_mons ])
+    if is_all_dead:
+        await ctx.send(f"You've cleared the {dungeon.biome} dungeon! Congratulations!")
+    else:
+        for mons in dungeon.room_mons:
+            if mons != 0:
+                room = mons
+                break
+        print(room)
+        printing_monsters = []
+        if room == 1:
+            monster = create_single_monster(dungeon)
+            await ctx.send(f"These are the monsters you're fighting!:")
+            await ctx.send(monster.printMonster())
+        else:
+            monsters = create_list_monsters(dungeon, room)
+            for enemy in monsters:
+                printing_monsters.append(enemy.printMonster())
+            await ctx.send(f"These are the monsters you're fighting!:")
+            await ctx.send('\n'.join(printing_monsters))
 
 client.run(client.DISCORD_TOKEN)

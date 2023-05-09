@@ -1,0 +1,71 @@
+---
+common:
+  element: any
+  monsters:
+    - Goblin
+    - Skeleton
+    - Corrupted
+    - Virus
+    - Entity Faithful
+    - Voidling
+    - Minotaur
+    - Knight
+    - Troll
+    - Giant Rats
+Enki:
+  element: fire
+  modifiers:
+    - Furious
+    - Hungry
+    - Fiery
+    - Scorched
+  monsters:
+    - Fire Elemental
+    - Draco-Guard
+    - Fire Dancer
+    - Salamander
+    - Kobold
+Ahab:
+  element: water
+  modifiers:
+    - Frostbitten
+    - Watery
+  monsters:
+    - Water Elemental
+    - Crab Guard
+    - Turtle Warrior
+    - Mermaid
+Kirkjufell:
+  element: earth
+  modifiers:
+    - Crystalline
+    - Rock-Encased
+    - Squat
+    - Leafy
+    - Bark-skin
+    - Entangled
+    - Rooted
+    - Ancient
+    - Metallic
+    - Statue
+  monsters:
+    - Earth Elemental
+    - Dwarf Faithful
+    - Golem
+    - Witherkin
+    - Petal Blades
+    - Wood Elf
+    - Wolf
+    - Wurm
+    - Lizardfolk
+    - Carnivorous Snail
+Air:
+  element: air
+  modifiers:
+    - Swift
+    - Crackling
+  monsters:
+    - Air Elemental
+    - Griffin
+    - Harpy
+    - Stormclouds

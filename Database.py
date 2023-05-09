@@ -1,7 +1,7 @@
 # import sqlite3
 from datetime import datetime
 import sqlalchemy as db
-from DatabaseTables import Player, Character
+from models.DatabaseTables import Player, Character
 from sqlalchemy import inspect, select, insert, create_engine, MetaData, and_
 from sqlalchemy.orm import Session
 

@@ -1,0 +1,165 @@
+---
+character_attributes:
+  armor_types:
+    - name: DifferentialLeathers
+      defense: 6
+    - name: LogicBreastplate
+      defense: 8
+    - name: FractalScalemail
+      defense: 8
+    - name: NumeralBrigidine
+      defense: 9
+    - name: BinaryChainmail
+      defense: 9
+    - name: CodeRobes
+      defense: 4
+    - name: DataTattoos
+      defense: 3
+    - name: EntityPelt
+      defense: 5
+    - name: FurCloak
+      defense: 5
+    - name: SynthBuckler
+      defense: 5
+    - name: CyberPlate
+      defense: 10
+    - name: DefenseBots
+      defense: 10
+    - name: DeflectiveBracers
+      defense: 5
+    - name: TowerShield
+      defense: 7
+    - name: AbyssalCape
+      defense: 6
+    - name: WillForce
+      defense: 4
+    - name: ElectroBulwark
+      defense: 6
+    - name: PhotonPauldrons
+      defense: 6
+    - name: GravityGauntlets
+      defense: 5
+    - name: CoreWatch
+      defense: 5
+  aspirations:
+    - name: Peace. I want to rest and retire to pursue other interests.
+    - name: Adventure. I want to explore and see what the Entities are hiding.
+    - name: Curiousity. I want to learn and understand this world.
+    - name: Compassion. I want to help others and care for those who need it.
+    - name: Perfection. I want to grow and become stronger.
+    - name: Worship. I want to praise the entities and join them.
+    - name: Fame. I want to be known and glorified by my Hamlet.
+    - name: Vengeance. I want to avenge a lost friend and redeem myself.
+    - name: Noble. I want to protect my Hamlet and keep us safe. 
+    - name: Purpose. I want to feel needed and get restless when not delving. 
+    - name: Rivalry. I want to be better than my rival and prove myself as the best.
+    - name: Ambition. I want to rule the Hamlet and gain the respect of the Delvers.
+  classes:
+    - name: CodePaladin
+      speed: [6, 9]
+      health: 60
+    - name: SynthDancer
+      speed: [14, 20]
+      health: 40
+    - name: DataAugur
+      speed: [9, 13]
+      health: 50
+    - name: CommandScrivnener
+      speed: [13, 17]
+      health: 30
+  occupations:
+    - name: Fungus-ible Token Farmer
+    - name: Bit Craftsperson
+    - name: Code Storyteller 
+    - name: Cyber Caravan Merchant 
+    - name: Electric Sheep Shepard
+    - name: Entity Interpreter and Watcher
+    - name: Border Ranger 
+    - name: Delver Tavern Owner
+    - name: Fractal Chef
+    - name: New Sentient Mentor (teacher)
+    - name: SynthBrew Brewer
+    - name: DiscSpace Quartermaster
+  personality_traits:
+    - name: Brave
+    - name: Poetic
+    - name: Cautious
+    - name: Clever
+    - name: Impulsive
+    - name: Caring
+    - name: Stoic
+    - name: Hopeful
+    - name: Anxious
+    - name: Aggressive
+    - name: Passive
+    - name: Reckless
+    - name: Proud
+    - name: Easy-going
+    - name: Charming
+    - name: Elegant
+    - name: Humble
+    - name: Glory Seeking
+    - name: Prickly
+    - name: Principled
+  weapon_elements:
+    - name: Code-Pure
+    - name: Stone-Carved
+    - name: Moon-Touched
+    - name: Sun-Scorched
+    - name: Gale-Blessed
+    - name: Void-Dripping
+    - name: Abyss-Pointed
+    - name: Poison-Laced
+    - name: Electrical-Crackling
+    - name: Flame-Kissed
+    - name: Chill-Crystalline
+    - name: Celestial-Glow
+    - name: Earthshaking-Gravity
+    - name: Prismatic-Shards
+    - name: Liquid-Silver
+    - name: Molten-Gold
+    - name: Dream-Dense
+    - name: Pixel-Constructed
+    - name: Twinned-Weapons
+    - name: Flowing-Aquan
+  weapons:
+    - name: Dagger
+      damage: 3
+    - name: Rapier
+      damage: 7
+    - name: Katana
+      damage: 7
+    - name: Claymore
+      damage: 12
+    - name: Zweihander
+      damage: 14
+    - name: Longsword
+      damage: 8
+    - name: Glaive
+      damage: 10
+    - name: Halberd
+      damage: 12
+    - name: Dane Ax
+      damage: 12
+    - name: Scythe
+      damage: 14
+    - name: Shotel
+      damage: 7
+    - name: Sickle
+      damage: 6
+    - name: Spear
+      damage: 10
+    - name: Mace
+      damage: 6
+    - name: Flail
+      damage: 9
+    - name: Bow
+      damage: 7
+    - name: Crossbow
+      damage: 8
+    - name: Warhammer
+      damage: 10
+    - name: Saber
+      damage: 6
+    - name: Estoc
+      damage: 8

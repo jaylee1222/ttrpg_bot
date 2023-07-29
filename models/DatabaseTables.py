@@ -1,4 +1,4 @@
-from sqlalchemy import String, ForeignKey, create_engine, MetaData, DateTime
+from sqlalchemy import Integer, String, ForeignKey, create_engine, MetaData, DateTime
 from sqlalchemy.orm import Mapped, mapped_column, DeclarativeBase
 from datetime import datetime
 
@@ -32,7 +32,11 @@ class Character(Base):
     personality: Mapped[str] = mapped_column(String(40))
     occupation: Mapped[str] = mapped_column(String(25))
     aspiration: Mapped[str] = mapped_column(String(50))
-    def __init__(self, time_created, char_name, first_class, second_class, weapon, weapon_element, armor, personality, occupation, aspiration):
+    speed: Mapped[int] = mapped_column(Integer)
+    damage: Mapped[int] = mapped_column(Integer)
+    defense: Mapped[int] = mapped_column(Integer)
+    health: Mapped[int] = mapped_column(Integer)
+    def __init__(self, time_created, char_name, first_class, second_class, weapon, weapon_element, armor, personality, occupation, aspiration, speed, damage, defense, health):
         self.time_created = time_created
         self.char_name = char_name
         self.first_class = first_class
@@ -43,6 +47,10 @@ class Character(Base):
         self.personality = personality
         self.occupation = occupation
         self.aspiration = aspiration
+        self.speed = speed
+        self.damage = damage
+        self.defense = defense
+        self.health = health
     
 Base.metadata_obj.create_all(engine, checkfirst=True)
         

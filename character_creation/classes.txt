@@ -1,4 +1,0 @@
-CodePaladin
-SynthDancer
-DataAugur
-CommandScrivnener

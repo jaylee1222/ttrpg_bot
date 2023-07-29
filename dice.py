@@ -1,6 +1,6 @@
 import random
 
-def dice_roll(dice_no, dice_sides):
+async def dice_roll(dice_no, dice_sides):
     numbers = []
     for _ in range(dice_no):
         number = random.randint(1, dice_sides)
@@ -9,7 +9,7 @@ def dice_roll(dice_no, dice_sides):
         numbers.append(number)
     return numbers
 
-def dungeon_dice_roll(dice_no, dice_sides):
+async def dungeon_dice_roll(dice_no, dice_sides):
     numbers = []
     for _ in range(dice_no):
         number = random.randint(0, dice_sides)
@@ -18,10 +18,9 @@ def dungeon_dice_roll(dice_no, dice_sides):
         numbers.append(number)
     return numbers
 
-def weighted_dungeon_dice_roll(common_choices, biome_choices, num_choices):
+async def weighted_dungeon_dice_roll(common_choices, biome_choices, num_choices):
     if num_choices == 1:
         monster = random.choices(biome_choices)
-        print(monster)
         return monster
     else:
         i = 0
@@ -39,7 +38,6 @@ def weighted_dungeon_dice_roll(common_choices, biome_choices, num_choices):
 
         return monsters
 
-def weighted_modifier_dice_roll(modifiers, num_choices):
+async def weighted_modifier_dice_roll(modifiers, num_choices):
     modifiers = random.choices(modifiers, k=num_choices)
-    print(modifiers)
     return modifiers

@@ -2,16 +2,66 @@
 common:
   element: any
   monsters:
-    - Goblin
-    - Skeleton
-    - Corrupted
-    - Virus
-    - Entity Faithful
-    - Voidling
-    - Minotaur
-    - Knight
-    - Troll
-    - Giant Rats
+    - name: Goblin
+      speed: [9, 13]
+      attacks: ["attack"]
+      health: 10
+      defense: 2
+      damage: 4
+    - name: Skeleton
+      speed: [7, 9]
+      attacks: ["attack"]
+      health: 10
+      defense: 2
+      damage: 4
+    - name: Corrupted
+      speed: [11, 16]
+      attacks: ["attack"]
+      health: 15
+      defense: 5
+      damage: 6
+    - name: Virus
+      speed: [12, 15]
+      attacks: ["attack"]
+      health: 20
+      defense: 3
+      damage: 7
+    - name: Entity Faithful
+      speed: [12, 15]
+      attacks: ["attack"]
+      health: 15
+      defense: 6
+      damage: 7
+    - name: Voidling
+      speed: [6, 9]
+      attacks: ["attack"]
+      health: 15
+      defense: 4
+      damage: 6
+    - name: Minotaur
+      speed: [10, 13]
+      attacks: ["attack"]
+      health: 25
+      defense: 6
+      damage: 8
+    - name: Knight
+      speed: [13, 17]
+      attacks: ["attack"]
+      health: 30
+      defense: 6
+      damage: 6
+    - name: Troll
+      speed: [5, 8]
+      attacks: ["attack"]
+      health: 40
+      defense: 6
+      damage: 10
+    - name: Giant Rats
+      speed: [15, 20]
+      attacks: ["attack"]
+      health: 15
+      defense: 2
+      damage: 4
 Enki:
   element: fire
   modifiers:
@@ -20,21 +70,66 @@ Enki:
     - Fiery
     - Scorched
   monsters:
-    - Fire Elemental
-    - Draco-Guard
-    - Fire Dancer
-    - Salamander
-    - Kobold
+    - name: Fire Elemental
+      speed: [13, 15]
+      attacks: ["attack"]
+      health: 20
+      defense: 3
+      damage: 5
+    - name: Draco-Guard
+      speed: [12, 17]
+      attacks: ["attack"]
+      health: 25
+      defense: 4
+      damage: 6
+    - name: Fire Dancer
+      speed: [15, 19]
+      attacks: ["attack"]
+      health: 15
+      defense: 2
+      damage: 4
+    - name: Salamander
+      speed: [8, 12]
+      attacks: ["attack"]
+      health: 15
+      defense: 2
+      damage: 5
+    - name: Kobold
+      speed: [9, 18]
+      attacks: ["attack"]
+      health: 10
+      defense: 2
+      damage: 5
 Ahab:
   element: water
   modifiers:
     - Frostbitten
     - Watery
   monsters:
-    - Water Elemental
-    - Crab Guard
-    - Turtle Warrior
-    - Mermaid
+    - name: Water Elemental
+      speed: [13, 15]
+      attacks: ["attack"]
+      health: 20
+      defense: 4
+      damage: 4
+    - name: Crab Guard
+      speed: [12, 17]
+      attacks: ["attack"]
+      health: 25
+      defense: 5
+      damage: 6
+    - name: Turtle Warrior
+      speed: [12, 17]
+      attacks: ["attack"]
+      health: 30
+      defense: 6
+      damage: 6
+    - name: Mermaid
+      speed: [10, 12]
+      attacks: ["attack"]
+      health: 20
+      defense: 2
+      damage: 5
 Kirkjufell:
   element: earth
   modifiers:
@@ -49,23 +144,93 @@ Kirkjufell:
     - Metallic
     - Statue
   monsters:
-    - Earth Elemental
-    - Dwarf Faithful
-    - Golem
-    - Witherkin
-    - Petal Blades
-    - Wood Elf
-    - Wolf
-    - Wurm
-    - Lizardfolk
-    - Carnivorous Snail
+    - name: Earth Elemental
+      speed: [13, 15]
+      attacks: ["attack"]
+      health: 20
+      defense: 5
+      damage: 5
+    - name: Dwarf Faithful
+      speed: [10, 15]
+      attacks: ["attack"]
+      health: 20
+      defense: 3
+      damage: 6
+    - name: Golem
+      speed: [5, 10]
+      attacks: ["attack"]
+      health: 40
+      defense: 6
+      damage: 10
+    - name: Witherkin
+      speed: [8, 15]
+      attacks: ["attack"]
+      health: 20
+      defense: 3
+      damage: 6
+    - name: Petal Blades
+      speed: [8, 17]
+      attacks: ["attack"]
+      health: 15
+      defense: 3
+      damage: 6
+    - name: Wood Elf
+      speed: [14, 18]
+      attacks: ["attack"]
+      health: 20
+      defense: 4
+      damage: 5
+    - name: Wolf
+      speed: [10, 18]
+      attacks: ["attack"]
+      health: 15
+      defense: 2
+      damage: 4
+    - name: Wurm
+      speed: [4, 10]
+      attacks: ["attack"]
+      health: 40
+      defense: 5
+      damage: 10
+    - name: Lizardfolk
+      speed: [8, 15]
+      attacks: ["attack"]
+      health: 20
+      defense: 3
+      damage: 5
+    - name: Carnivorous Snail
+      speed: [2, 8]
+      attacks: ["attack"]
+      health: 40
+      defense: 6
+      damage: 10
 Air:
   element: air
   modifiers:
     - Swift
     - Crackling
   monsters:
-    - Air Elemental
-    - Griffin
-    - Harpy
-    - Stormclouds
+    - name: Air Elemental
+      speed: [12, 15]
+      attacks: ["attack"]
+      health: 20
+      defense: 3
+      damage: 5
+    - name: Griffin
+      speed: [14, 18]
+      attacks: ["attack"]
+      health: 30
+      defense: 4
+      damage: 7
+    - name: Harpy
+      speed: [10, 19]
+      attacks: ["attack"]
+      health: 20
+      defense: 5
+      damage: 5
+    - name: Stormclouds
+      speed: [6, 12]
+      attacks: ["attack"]
+      health: 40
+      defense: 6
+      damage: 10

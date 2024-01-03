@@ -26,12 +26,25 @@ async def get_weapon_response(client, ctx, configList):
 
 async def generate_character_traits(configList):
     dice_size = len(configList)
-    print(dice_size)
-    character_trait = random.choice(configList).strip("\n")
-    return character_trait
+    character_trait = random.choice(configList)
+    print(character_trait['name'])
+    return character_trait['name']
 
 async def generate_personality(personalityList):
     personality_traits = []
+    new_personality_traits = []
     personality_traits = random.sample(personalityList, 3)
-    stripped_personality_traits = [x[:-1] for x in personality_traits]
-    return stripped_personality_traits
+    for personality in personality_traits:
+        print(personality['name'])
+        new_personality_traits.append(personality['name'])
+    return new_personality_traits
+
+async def generate_speed(speed):
+    print(speed)
+    return random.randrange(speed[0], speed[1])
+
+async def generate_class(configList):
+    dice_size = len(configList)
+    character_trait = random.choice(configList)
+    print(character_trait['name'])
+    return character_trait['name']

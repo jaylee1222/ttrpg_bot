@@ -15,7 +15,7 @@ def database_connection():
 def insert(person, character):
     traits = ', '.join(character[7])
     engine = database_connection()
-    characterModel = Character(time_created = datetime.now(), char_name = character[0], first_class=character[2], second_class=character[3], weapon=character[4], weapon_element=character[5], armor=character[6], personality=traits, occupation=character[8], aspiration=character[9])
+    characterModel = Character(time_created = datetime.now(), char_name = character[0], first_class=character[2], second_class=character[3], weapon=character[4], weapon_element=character[5], armor=character[6], personality=traits, occupation=character[8], aspiration=character[9], speed=character[10], damage=character[11], defense=character[12], health=character[13])
     with Session(engine) as session:
         result = session.add(characterModel)
         session.commit()

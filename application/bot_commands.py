@@ -4,20 +4,20 @@ from dotenv import load_dotenv
 import discord
 from discord.ext import commands
 from DiscordUtilities import get_channel
-from CharacterCreation import get_name_response, get_weapon_response, generate_character_traits, generate_personality
+from CharacterCreation import get_name_response, get_weapon_response, generate_character_traits, generate_personality, generate_speed, generate_class
 from Database import insert, select_characters, load_selected_character
 from models.DatabaseTables import Player, Character
 from models.Dungeon import Dungeon
+from models.Monster import Monster
 from monster_factory import create_list_monsters, create_single_monster
+from dice import dungeon_dice_roll
+from combat_utilities import check_player_health, get_attack_response
+import yaml
+from models.PlayerCharacter import PlayerCharacter
 # import requests
 
 # base_url = "https://discord.com/oauth2/token"
 # scope = "bot"
-class PlayerCharacter():
-    def __init__(self, player_name, character_name):
-        self.player_name = player_name
-        self.character_name = character_name
-        pass
 
 # class Token():
 #     def __init__(self):
@@ -38,6 +38,7 @@ class MyClient(commands.Bot, discord.Client):
         intents.message_content = True
         self.characters = []
         self.dungeons = []
+        self.fight_mons = []
 
         super().__init__(command_prefix=commands.when_mentioned_or('$'), intents=intents)
 
@@ -124,6 +125,8 @@ async def create_character(ctx):
 
 @client.command(name="fastCreateCharacter")
 async def fast_create_character(ctx):
+    with open('character_creation.yml', 'r') as file:
+        character_create_options = yaml.safe_load(file)
     weaponList = None
     weaponElementList = None
     classList = None
@@ -131,27 +134,13 @@ async def fast_create_character(ctx):
     personalityList = None
     occupationList = None
     aspirationList = None
-    weaponfilename = "character_creation/weapons.txt"
-    weaponelementfilename = "character_creation/weaponelements.txt"
-    classfilename = "character_creation/classes.txt"
-    armorfilename = "character_creation/armortypes.txt"
-    personalityfilename = "character_creation/personalitytraits.txt"
-    occupationfilename = "character_creation/occupations.txt"
-    aspirationfilename = "character_creation/aspirations.txt"
-    with open(classfilename, 'r') as classes:
-        classList = classes.readlines()
-    with open(weaponfilename, 'r') as weapons:
-        weaponList = weapons.readlines()
-    with open(weaponelementfilename, 'r') as weaponelements:
-        weaponElementList = weaponelements.readlines()
-    with open(armorfilename, 'r') as armor:
-        armorList = armor.readlines()
-    with open(personalityfilename, 'r') as personalities:
-        personalityList = personalities.readlines()
-    with open(occupationfilename, 'r') as occupations:
-        occupationList = occupations.readlines()
-    with open(aspirationfilename, 'r') as aspirations:
-        aspirationList = aspirations.readlines()
+    weaponList = character_create_options['character_attributes']['weapons']
+    weaponElementList = character_create_options['character_attributes']['weapon_elements']
+    classList = character_create_options['character_attributes']['classes']
+    armorList = character_create_options['character_attributes']['armor_types']
+    personalityList = character_create_options['character_attributes']['personality_traits']
+    occupationList = character_create_options['character_attributes']['occupations']
+    aspirationList = character_create_options['character_attributes']['aspirations']
     characterName = None
     firstClass = None
     secondClass = None
@@ -166,13 +155,20 @@ async def fast_create_character(ctx):
     characterName = await get_name_response(client=client, ctx=ctx)
     weaponChoice = await generate_character_traits(weaponList)
     weaponElementChoice = await generate_character_traits(weaponElementList)
-    firstClass = await generate_character_traits(classList)
-    secondClass = await generate_character_traits(classList)
+    firstClass = await generate_class(classList)
+    secondClass = await generate_class(classList)
     armorChoice = await generate_character_traits(armorList)
     personalityChoice = await generate_personality(personalityList)
     occupationChoice = await generate_character_traits(occupationList)
     aspirationChoice = await generate_character_traits(aspirationList)
     split_choice = aspirationChoice.split()
+    firstClassProperties = next((x for x in classList if x['name'] == firstClass), None)
+    defenseChoice = next((x for x in armorList if x['name'] == armorChoice), None)
+    damageChoice = next((x for x in weaponList if x['name'] == weaponChoice), None)
+    speed = await generate_speed(firstClassProperties['speed'])
+    defense = defenseChoice['defense']
+    damage = damageChoice['damage']
+    health = firstClassProperties['health']
     shortened_aspiration = split_choice[0].replace(".", "")
     discord_name = str(ctx.message.author)
     await ctx.send(f"Great to meet ya, {characterName}! Let’s get you set up shall we? This process is called Evocation." + 
@@ -184,7 +180,7 @@ async def fast_create_character(ctx):
     
     f"Now, who are you… It seems your Code sings mostly of {personalityChoice[0]}, {personalityChoice[1]} and {personalityChoice[2]}." + 
     f" In the Hamlet you are a {occupationChoice} it would seem. But yes, deeper still, you yearn for… {aspirationChoice}." + 
-    f" We all yearn for something. I hope you find yours.\n\n" + 
+    f" We all yearn for someguy. I hope you find yours.\n\n" + 
 
     f"Good luck out there. Don’t die okay?")
     c1 = []
@@ -198,12 +194,16 @@ async def fast_create_character(ctx):
     c1.append(personalityChoice)
     c1.append(occupationChoice)
     c1.append(aspirationChoice)
+    c1.append(speed)
+    c1.append(damage)
+    c1.append(defense)
+    c1.append(health)
     p1 = []
     p1.append(discord_name)
     insert(p1, c1)
     await create_channel(ctx, characterName)
     channel = await get_channel(ctx, client, "text", characterName)
-    new_character = PlayerCharacter(discord_name, characterName)
+    new_character = PlayerCharacter(discord_name, characterName, speed, damage, defense, health)
     client.characters.append(new_character)
     await channel.send(
         f"character name: {c1[0]}\n" + 
@@ -214,7 +214,11 @@ async def fast_create_character(ctx):
         f"armor: {c1[6]}\n" + 
         f"personality: {c1[7][0]}, {c1[7][1]}, {c1[7][2]}\n" +
         f"occupation: {c1[8]}\n" +
-        f"aspiration: {c1[9]}")
+        f"aspiration: {c1[9]}\n" +
+        f"speed: {c1[10]}\n" +
+        f"damage: {c1[11]}\n" +
+        f"defense: {c1[12]}\n" +
+        f"health: {c1[13]}")
     pass
 
 @client.command()
@@ -240,7 +244,7 @@ async def load_character(ctx, *, arg):
     await create_channel(ctx, character.char_name)
     channel = await get_channel(ctx, client, "text", character.char_name)
     print(channel.name)
-    new_character = PlayerCharacter(disc_name, character.char_name)
+    new_character = PlayerCharacter(disc_name, character.char_name, character.speed, character.damage, character.defense, character.health)
     client.characters.append(new_character)
     await channel.send(
         f"character name: {character.char_name}\n" + 
@@ -251,7 +255,11 @@ async def load_character(ctx, *, arg):
         f"armor: {character.armor}\n" + 
         f"personality: {character.personality}\n" +
         f"occupation: {character.occupation}\n" +
-        f"aspiration: {character.aspiration}")
+        f"aspiration: {character.aspiration}\n" +
+        f"speed: {character.speed}\n" +
+        f"damage: {character.damage}\n" +
+        f"defense: {character.defense}\n" +
+        f"health: {character.health}")
     pass
 
 @client.command()
@@ -294,36 +302,104 @@ async def get_members(ctx):
 
 @client.command()
 async def create_dungeon(ctx):
-    dungeon = Dungeon(4)
-    dungeon.room_mons = dungeon.populate_dungeon()
+    dungeon = await Dungeon(4)
     client.dungeons.append(dungeon)
     await ctx.send(f"the first dungeon is {dungeon.biome}, each room will have this number of monsters: {dungeon.room_mons[0]}, {dungeon.room_mons[1]}, {dungeon.room_mons[2]}, {dungeon.room_mons[3]} and the size is {dungeon.size}")
     pass
 
 @client.command()
-async def first_room(ctx):
+async def next_room(ctx):
     dungeon = client.dungeons[len(client.dungeons) - 1]
+    print(all([ v == 0 for v in dungeon.room_mons ]))
     is_all_dead = False
     is_all_dead = all([ v == 0 for v in dungeon.room_mons ])
     if is_all_dead:
         client.dungeons.pop(len(client.dungeons) - 1)
         await ctx.send(f"You've cleared the {dungeon.biome} dungeon! Congratulations!")
+        return
     else:
-        for mons in dungeon.room_mons:
+        for mons in dungeon.room_mons: 
             if mons != 0:
                 room = mons
                 break
         print(room)
         printing_monsters = []
         if room == 1:
-            monster = create_single_monster(dungeon)
+            monster = await create_single_monster(dungeon)
+            client.fight_mons.append(monster)
             await ctx.send(f"These are the monsters you're fighting!:")
-            await ctx.send(monster.printMonster())
+            await ctx.send(monster.name)
         else:
-            monsters = create_list_monsters(dungeon, room)
+            monsters = await create_list_monsters(dungeon, room)
+            client.fight_mons = monsters
             for enemy in monsters:
-                printing_monsters.append(enemy.printMonster())
+                printing_monsters.append(enemy.name)
             await ctx.send(f"These are the monsters you're fighting!:")
             await ctx.send('\n'.join(printing_monsters))
+
+    # Combat function - 
+    # Here we take two lists, players and monsters, combine them into a combat order sorting by highest speed
+    # When going through combat, a character will attack, if something is killed, health will go to zero. There
+    # will be a health check at the beginning of every person's turn. If 0, skip. else execute the options.
+
+@client.command()
+async def start_combat(ctx):
+    print("-----STARTING COMBAT----")
+    players = client.characters
+    mons = client.fight_mons
+    combat_order = [*players, *mons]
+    monster_names = []
+    combat_order.sort(key=lambda x: int(x.speed), reverse=True)
+    print("COMBAT ORDER:")
+    print(str(combat_order))
+    has_mons = True
+    while has_mons:
+        for guy in combat_order:
+            print(f"this is inside the while loop: {guy}")
+            print(f"this is the len of mons: {len(mons)}")
+            if (len(mons) == 0):
+                has_mons = False
+                break
+            if guy.health <= 0:
+                if (isinstance(guy, Monster)):
+                    print(f"skipping {guy.name}'s turn")
+                if (isinstance(guy, PlayerCharacter)):
+                    print(f"skpping {guy.character_name}'s turn")
+                continue
+            else:
+                if isinstance(guy, Monster):
+                    print(f"it is {guy.name}'s turn")
+                    player = await check_player_health(players)
+                    damage = await guy.attack(player)
+                    player.health -= damage
+                    await ctx.send(f"{guy.name} has attacked {player.character_name} for {damage} damage!")
+                    if player.health < 0:
+                        player.health = 0
+                    if player.health == 0:
+                        players.remove(player)
+                        await ctx.send(f"Oh no! Your party number dwindles. {player.character_name} has fallen. {guy.name} has attacked {player} for {damage} damage!")
+                elif isinstance(guy, PlayerCharacter):
+                    monster_names.clear()
+                    print(f"it is {guy.character_name}'s turn")
+                    await ctx.send(f"The enemy awaits an attack! {guy.character_name} who would you like to attack?")
+                    print(f"these are the mons {mons}")
+                    for mon in mons:
+                        monster_names.append(mon.name)
+                    await ctx.send(f"\n".join(monster_names))
+                    mon = await get_attack_response(client, ctx, monster_names)
+                    monster = next((x for x in mons if x.name == mon), None)
+                    print(f"{guy.character_name} is attacking {monster.name}")
+                    damage = await guy.attack(monster)
+                    monster.health = monster.health - damage
+                    print(f"{monster.name}'s health is at {monster.health}")
+                    await ctx.send(f"{guy.character_name} you attack {monster.name} for {damage} damage!")
+                    if monster.health < 0:
+                        monster.health = 0
+                    if monster.health == 0:
+                        print(f"{monster.name} has been killed with health: {monster.health}")
+                        mons.remove(monster)
+                        await ctx.send(f"You killed {monster.name}! This is a small win but keep your head in the fight!")
+    await ctx.send(f"You've killed all of the monsters! You cleared the dungeon!")
+    client.fight_mons = []
 
 client.run(client.DISCORD_TOKEN)

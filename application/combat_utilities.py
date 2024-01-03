@@ -12,9 +12,9 @@ async def get_attack_response(client, ctx, mons):
         return isinstance(m.content, str) and m.content in mons
     try:
         for mon in mons:
-            print(mon)
+            print(f'this is the mon: {mon}')
         response = await client.wait_for('message', check=check, timeout=response_timeout)
-        print(response.content)
+        print(f'this is the message: {response.content}')
         return response.content
     except asyncio.TimeoutError:
         return await ctx.send(f'Sorry, you took too long to answer.')

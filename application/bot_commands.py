@@ -310,13 +310,15 @@ async def create_dungeon(ctx):
 @client.command()
 async def next_room(ctx):
     dungeon = client.dungeons[len(client.dungeons) - 1]
+    print(all([ v == 0 for v in dungeon.room_mons ]))
     is_all_dead = False
     is_all_dead = all([ v == 0 for v in dungeon.room_mons ])
     if is_all_dead:
         client.dungeons.pop(len(client.dungeons) - 1)
         await ctx.send(f"You've cleared the {dungeon.biome} dungeon! Congratulations!")
+        return
     else:
-        for mons in dungeon.room_mons:
+        for mons in dungeon.room_mons: 
             if mons != 0:
                 room = mons
                 break
@@ -335,35 +337,36 @@ async def next_room(ctx):
             await ctx.send(f"These are the monsters you're fighting!:")
             await ctx.send('\n'.join(printing_monsters))
 
+    # Combat function - 
+    # Here we take two lists, players and monsters, combine them into a combat order sorting by highest speed
+    # When going through combat, a character will attack, if something is killed, health will go to zero. There
+    # will be a health check at the beginning of every person's turn. If 0, skip. else execute the options.
+
 @client.command()
 async def start_combat(ctx):
     print("-----STARTING COMBAT----")
     players = client.characters
     mons = client.fight_mons
-    combat_order = players + mons
+    combat_order = [*players, *mons]
     monster_names = []
     combat_order.sort(key=lambda x: int(x.speed), reverse=True)
     print("COMBAT ORDER:")
-    for guy in combat_order:
-        print(guy)
+    print(str(combat_order))
     has_mons = True
     while has_mons:
-        print(f"from right after the while: {has_mons}")
-        if not next(isinstance(n, Monster) for n in combat_order):
-            has_mons = False
-            print(f"from inside the while loop if: {has_mons}")
-        else:
-            for guy in combat_order:
-                for item in combat_order:
-                    if isinstance(item, Monster):
-                        has_mons = True
-                        print(f"from inside the for loop: {has_mons}")
-                        break
-                    else:
-                        has_mons = False
-                        print(f"from inside the for loop: {has_mons}")
-                # if not any(isinstance(n, Monster) for n in combat_order):
-                #     has_mons = False
+        for guy in combat_order:
+            print(f"this is inside the while loop: {guy}")
+            print(f"this is the len of mons: {len(mons)}")
+            if (len(mons) == 0):
+                has_mons = False
+                break
+            if guy.health <= 0:
+                if (isinstance(guy, Monster)):
+                    print(f"skipping {guy.name}'s turn")
+                if (isinstance(guy, PlayerCharacter)):
+                    print(f"skpping {guy.character_name}'s turn")
+                continue
+            else:
                 if isinstance(guy, Monster):
                     print(f"it is {guy.name}'s turn")
                     player = await check_player_health(players)
@@ -373,13 +376,13 @@ async def start_combat(ctx):
                     if player.health < 0:
                         player.health = 0
                     if player.health == 0:
-                        combat_order = combat_order.pop(combat_order.index(player))
-                        players = players.pop(players.index(player))
+                        players.remove(player)
                         await ctx.send(f"Oh no! Your party number dwindles. {player.character_name} has fallen. {guy.name} has attacked {player} for {damage} damage!")
                 elif isinstance(guy, PlayerCharacter):
                     monster_names.clear()
                     print(f"it is {guy.character_name}'s turn")
                     await ctx.send(f"The enemy awaits an attack! {guy.character_name} who would you like to attack?")
+                    print(f"these are the mons {mons}")
                     for mon in mons:
                         monster_names.append(mon.name)
                     await ctx.send(f"\n".join(monster_names))
@@ -394,17 +397,9 @@ async def start_combat(ctx):
                         monster.health = 0
                     if monster.health == 0:
                         print(f"{monster.name} has been killed with health: {monster.health}")
-                        combat_order = combat_order.pop(combat_order.index(monster))
-                        mons = mons.pop(mons.index(monster))
+                        mons.remove(monster)
                         await ctx.send(f"You killed {monster.name}! This is a small win but keep your head in the fight!")
-        print("end of rotation")
-    await ctx.send(f"You defeated all of the monsters! Congratulations!")
-
-
-    
-    # await ctx.send(f"This is the order:")
-    # await ctx.send('\n'.join(str(guy) for guy in combat_order))
-    # if isinstance(combat_order[0], Monster):
-    #     await ctx.send(f"{str(combat_order[0])} is going to attack!")
+    await ctx.send(f"You've killed all of the monsters! You cleared the dungeon!")
+    client.fight_mons = []
 
 client.run(client.DISCORD_TOKEN)

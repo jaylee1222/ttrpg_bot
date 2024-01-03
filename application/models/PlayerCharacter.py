@@ -12,7 +12,7 @@ class PlayerCharacter():
         return "player_name : {} character_name : {} speed : {} damage : {} defense : {} health : {}".format(self.player_name, self.character_name, self.speed, self.damage, self.defense, self.health)
     
     def __repr__(self) -> str:
-        return {"player_name":self.player_name, "character_name":self.character_name, "speed":self.speed, "damage":self.damage, "defense":self.defense, "health":self.health}
+        return "player_name : {} character_name : {} speed : {} damage : {} defense : {} health : {}".format(self.player_name, self.character_name, self.speed, self.damage, self.defense, self.health)
 
     async def attack(self, target):
         damage = (self.damage * 3) - (target.defense * 2)

@@ -9,11 +9,11 @@ from Database import insert, select_characters, load_selected_character
 from models.DatabaseTables import Player, Character
 from models.Dungeon import Dungeon
 from models.Monster import Monster
-from monster_factory import create_list_monsters, create_single_monster
 from dice import dungeon_dice_roll
 from combat_utilities import check_player_health, get_attack_response
 import yaml
 from models.PlayerCharacter import PlayerCharacter
+from BaseDrawing import draw_square
 # import requests
 
 # base_url = "https://discord.com/oauth2/token"
@@ -38,7 +38,7 @@ class MyClient(commands.Bot, discord.Client):
         intents.message_content = True
         self.characters = []
         self.dungeons = []
-        self.fight_mons = []
+        self.dungeon_room = 0
 
         super().__init__(command_prefix=commands.when_mentioned_or('$'), intents=intents)
 
@@ -310,7 +310,11 @@ async def create_dungeon(ctx):
 @client.command()
 async def next_room(ctx):
     dungeon = client.dungeons[len(client.dungeons) - 1]
-    print(all([ v == 0 for v in dungeon.room_mons ]))
+    print(f"this is the fight mons: {dungeon.rooms[client.dungeon_room]}")
+    if not dungeon.rooms[client.dungeon_room].monsters:
+        dungeon.room_mons[client.dungeon_room] = 0
+    print(f"this is the dungeon: {dungeon}")
+    print(f"this is the room_mons: {all([ v == 0 for v in dungeon.room_mons ])}")
     is_all_dead = False
     is_all_dead = all([ v == 0 for v in dungeon.room_mons ])
     if is_all_dead:
@@ -318,35 +322,19 @@ async def next_room(ctx):
         await ctx.send(f"You've cleared the {dungeon.biome} dungeon! Congratulations!")
         return
     else:
-        for mons in dungeon.room_mons: 
-            if mons != 0:
-                room = mons
-                break
-        print(room)
+        if dungeon.room_mons[client.dungeon_room] == 0:
+            client.dungeon_room += 1
         printing_monsters = []
-        if room == 1:
-            monster = await create_single_monster(dungeon)
-            client.fight_mons.append(monster)
-            await ctx.send(f"These are the monsters you're fighting!:")
-            await ctx.send(monster.name)
-        else:
-            monsters = await create_list_monsters(dungeon, room)
-            client.fight_mons = monsters
-            for enemy in monsters:
-                printing_monsters.append(enemy.name)
-            await ctx.send(f"These are the monsters you're fighting!:")
-            await ctx.send('\n'.join(printing_monsters))
-
-    # Combat function - 
-    # Here we take two lists, players and monsters, combine them into a combat order sorting by highest speed
-    # When going through combat, a character will attack, if something is killed, health will go to zero. There
-    # will be a health check at the beginning of every person's turn. If 0, skip. else execute the options.
+        await ctx.send(f"These are the monsters you're fighting!:")
+        for monster in dungeon.rooms[client.dungeon_room].monsters:
+            printing_monsters.append(monster.name)
+        await ctx.send('\n'.join(printing_monsters))
 
 @client.command()
 async def start_combat(ctx):
     print("-----STARTING COMBAT----")
     players = client.characters
-    mons = client.fight_mons
+    mons = client.dungeons[len(client.dungeons) - 1].rooms[client.dungeon_room].monsters
     combat_order = [*players, *mons]
     monster_names = []
     combat_order.sort(key=lambda x: int(x.speed), reverse=True)
@@ -400,6 +388,10 @@ async def start_combat(ctx):
                         mons.remove(monster)
                         await ctx.send(f"You killed {monster.name}! This is a small win but keep your head in the fight!")
     await ctx.send(f"You've killed all of the monsters! You cleared the dungeon!")
-    client.fight_mons = []
+    client.dungeons[len(client.dungeons) - 1].rooms[client.dungeon_room].monsters = []
+
+# @client.command()
+# async def draw_stables(ctx):
+#     draw_square()
 
 client.run(client.DISCORD_TOKEN)

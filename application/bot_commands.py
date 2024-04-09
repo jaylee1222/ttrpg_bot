@@ -13,6 +13,7 @@ from dice import dungeon_dice_roll
 from combat_utilities import check_player_health, get_attack_response
 import yaml
 from models.PlayerCharacter import PlayerCharacter
+import sys
 # import requests
 
 # base_url = "https://discord.com/oauth2/token"
@@ -191,6 +192,9 @@ async def fast_create_character(ctx):
     f" We all yearn for someguy. I hope you find yours.\n\n" + 
 
     f"Good luck out there. Don’t die okay?")
+    await ctx.send(f"You know...there's a space out on the edge of town...nobody is staying there and honestly. I just don't have space for you here." +
+                   " This might be the perfect spot for you and your gang to call home! It's called 'The Farm'! You and your gang can rename it to" +
+                   " whatever you would like.")
     # create logic that asks player for the house name and save it to the database
     c1 = []
     c1.append(characterName)
@@ -235,9 +239,28 @@ async def load_character_options(ctx):
     choices = []
     disc_name = str(ctx.message.author)
     characters = select_characters(disc_name)
-    await ctx.send(f"Oi, you've played before would you like to use one of your characters? Here are your choices:")
+    if (len(characters) <= 0):
+        await ctx.send(f"Looks like you've never played before, hon...go instantiate yourself in the delves to see who you truly are!")
+        return
+    else:
+        await ctx.send(f"Oi, you've played before would you like to use one of your characters? Here are your choices:")
     for character in characters:
         choices.append(character[0].char_name)
+    await ctx.send('\n'.join(choices))
+    pass
+
+@client.command()
+async def load_housing_options(ctx):
+    choices = []
+    disc_name = str(ctx.message.author)
+    homes = select_homes(disc_name)
+    if (len(homes) <= 0):
+        await ctx.send(f"Looks like you don't have a home here amongst the delves...you should try creating your own gang to be given a home amonst the delves")
+        return
+    else:
+        await ctx.send("You've played before! Which house are you living in these days?")
+    for home in homes:
+        choices.append(home[0].home_name)
     await ctx.send('\n'.join(choices))
     pass
 
@@ -272,8 +295,6 @@ async def load_character(ctx, *, arg):
         f"damage: {character.damage}\n" +
         f"defense: {character.defense}\n" +
         f"health: {character.health}")
-    await ctx.send("You've played before! Which house are you living in these days?")
-    await ctx.send('\n'.join(homes))
     pass
 
 @client.command()
@@ -349,6 +370,7 @@ async def start_combat(ctx):
     print("-----STARTING COMBAT----")
     players = client.characters
     mons = client.dungeons[len(client.dungeons) - 1].rooms[client.dungeon_room].monsters
+    loot = client.dungeons[len(client.dungeons) - 1].rooms[client.dungeon_room].building_mat_loot
     combat_order = [*players, *mons]
     monster_names = []
     combat_order.sort(key=lambda x: int(x.speed), reverse=True)
@@ -401,7 +423,7 @@ async def start_combat(ctx):
                         print(f"{monster.name} has been killed with health: {monster.health}")
                         mons.remove(monster)
                         await ctx.send(f"You killed {monster.name}! This is a small win but keep your head in the fight!")
-    await ctx.send(f"You've killed all of the monsters! You cleared the dungeon!")
+    await ctx.send(f"You've killed all of the monsters! You cleared the dungeon! You've been awarded {loot}!")
     # give loot here
     # how will I keep track of the loot? database...
     # a player owns a base? a group owns a base?

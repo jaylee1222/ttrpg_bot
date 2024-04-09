@@ -27,7 +27,7 @@ def insert(person, character):
         session.add(playerModel)
         session.commit()
         session.refresh(playerModel)
-    player_home = PlayerHome(player_owner = playerModel.player_id, gear_items = '', wood = 0, stone = 0)
+    player_home = PlayerHome(player_owner = playerModel.player_id, home_name = 'The Farm', gear_items = '')
     with Session(engine) as session:
         result = session.add(player_home)
         session.commit()

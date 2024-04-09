@@ -26,6 +26,7 @@ class Dungeon:
                 for monster in monsters:
                     print(f"this is the monster: {monster}")
                 room.monsters = monsters
+                room.building_mat_loot = await room.generate_building_mat_loot(self.biome, room.monsters)
                 rooms.append(room)
         for room in rooms:
             print(f"this is the room: {room.monsters}")

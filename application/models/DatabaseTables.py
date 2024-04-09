@@ -5,7 +5,7 @@ from datetime import datetime
 engine = create_engine('sqlite:///ttrpg_bot.db', echo = True)
 metadata_obj = MetaData()
 
-class Base (DeclarativeBase):
+class Base(DeclarativeBase):
     metadata_obj = MetaData()
 
 class PlayerHome(Base):
@@ -17,11 +17,56 @@ class PlayerHome(Base):
     gear_items: Mapped[str] = mapped_column(String(999))
     wood: Mapped[int] = mapped_column(Integer)
     stone: Mapped[int] = mapped_column(Integer)
-    def __init__(self, player_owner, gear_items, wood, stone):
+    raw_monster_meat: Mapped[int] = mapped_column(Integer)
+    primordial_crystal: Mapped[int] = mapped_column(Integer)
+    daisies: Mapped[int] = mapped_column(Integer)
+    fire_crystal: Mapped[int] = mapped_column(Integer)
+    fire_stone: Mapped[int] = mapped_column(Integer)
+    flame_crysanthemum: Mapped[int] = mapped_column(Integer)
+    flame_broiled_monster_liver: Mapped[int] = mapped_column(Integer)
+    water_crystal: Mapped[int] = mapped_column(Integer)
+    seaweed_covered_stone: Mapped[int] = mapped_column(Integer)
+    driftwood: Mapped[int] = mapped_column(Integer)
+    water_chestnut: Mapped[int] = mapped_column(Integer)
+    raw_salmon: Mapped[int] = mapped_column(Integer)
+    earth_crystal: Mapped[int] = mapped_column(Integer)
+    moss_covered_stone: Mapped[int] = mapped_column(Integer)
+    synthflower: Mapped[int] = mapped_column(Integer)
+    carrot: Mapped[int] = mapped_column(Integer)
+    sunflower: Mapped[int] = mapped_column(Integer)
+    air_crystal: Mapped[int] = mapped_column(Integer)
+    porous_stone: Mapped[int] = mapped_column(Integer)
+    dandelion: Mapped[int] = mapped_column(Integer)
+    cotton_candy: Mapped[int] = mapped_column(Integer)
+    def __init__(self, home_name, player_owner, gear_items, wood = 0, stone = 0, raw_monster_meat = 0, primordial_crystal = 0, daisies = 0, fire_crystal = 0, fire_stone = 0, 
+                 flame_crysanthemum = 0, flame_broiled_monster_liver = 0, water_crystal = 0, seaweed_covered_stone = 0, driftwood = 0, water_chestnut = 0, raw_salmon = 0, 
+                 earth_crystal = 0, moss_covered_stone = 0, synthflower = 0, carrot = 0, sunflower = 0, air_crystal = 0, porous_stone = 0, dandelion = 0, cotton_candy = 0):
+        self.home_name = home_name
         self.player_owner = player_owner
         self.gear_items = gear_items
         self.wood = wood
         self.stone = stone
+        self.raw_monster_meat = raw_monster_meat
+        self.primordial_crystal = primordial_crystal
+        self.daisies = daisies
+        self.fire_crystal = fire_crystal
+        self.fire_stone = fire_stone
+        self.flame_crysanthemum = flame_crysanthemum
+        self.flame_broiled_monster_liver = flame_broiled_monster_liver
+        self.water_crystal = water_crystal
+        self.seaweed_covered_stone = seaweed_covered_stone
+        self.driftwood = driftwood
+        self.water_chestnut = water_chestnut
+        self.raw_salmon = raw_salmon
+        self.earth_crystal = earth_crystal
+        self.moss_covered_stone = moss_covered_stone
+        self.synthflower = synthflower
+        self.carrot = carrot
+        self.sunflower = sunflower
+        self.air_crystal = air_crystal
+        self.porous_stone = porous_stone
+        self.dandelion = dandelion
+        self.cotton_candy = cotton_candy
 
 class Player(Base):
     __tablename__ = "Players"

@@ -12,6 +12,17 @@ async def get_name_response(client, ctx):
         return response.content
     except asyncio.TimeoutError:
         return await ctx.send(f'Sorry, you took too long to answer.')
+    
+async def get_home_response(client, ctx):
+    def check(m):
+        print(m.content)
+        return isinstance(m.content, str)
+    try:
+        response = await client.wait_for('message', check=check, timeout=response_timeout)
+        print(response.content)
+        return response.content
+    except asyncio.TimeoutError:
+        return await ctx.send(f'Sorry, you took too long to answer.')
 
 async def get_weapon_response(client, ctx, configList):
     def weaponcheck(m):

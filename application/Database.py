@@ -1,12 +1,13 @@
 # import sqlite3
 from datetime import datetime
 import sqlalchemy as db
-from models.DatabaseTables import Player, Character
+from models.DatabaseTables import Player, Character, PlayerHome
 from sqlalchemy import inspect, select, insert, create_engine, MetaData, and_
 from sqlalchemy.orm import Session
 
 def database_connection():
     engine = create_engine('sqlite:///ttrpg_bot.db', echo = True)
+    PlayerHome.__table__.create(engine, checkfirst=True)
     Player.__table__.create(engine, checkfirst=True)
     Character.__table__.create(engine, checkfirst=True)
 
@@ -25,6 +26,11 @@ def insert(person, character):
     with Session(engine) as session:
         session.add(playerModel)
         session.commit()
+        session.refresh(playerModel)
+    player_home = PlayerHome(player_owner = playerModel.player_id, gear_items = '', wood = 0, stone = 0)
+    with Session(engine) as session:
+        result = session.add(player_home)
+        session.commit()
 
 def select_characters(player):
     engine = database_connection()
@@ -36,6 +42,17 @@ def select_characters(player):
         char_info = session.execute(chars).fetchone()
         player_chars.append(char_info)
     return player_chars
+
+def select_homes(player):
+    engine = database_connection()
+    player_homes = []
+    session = Session(engine)
+    ids = select(Player).where(Player.disc_name == player)
+    for id in session.scalars(ids):
+        homes = select(PlayerHome).where(PlayerHome.home_id == id.player_id)
+        home_info = session.execute(homes).fetchone()
+        player_homes.append(home_info)
+    return player_homes
 
 async def load_selected_character(desired_char_name, player):
     engine = database_connection()

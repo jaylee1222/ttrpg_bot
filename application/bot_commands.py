@@ -5,7 +5,7 @@ import discord
 from discord.ext import commands
 from DiscordUtilities import get_channel
 from CharacterCreation import get_name_response, get_weapon_response, generate_character_traits, generate_personality, generate_speed, generate_class
-from Database import insert, select_characters, load_selected_character
+from Database import insert, select_characters, load_selected_character, select_homes
 from models.DatabaseTables import Player, Character
 from models.Dungeon import Dungeon
 from models.Monster import Monster
@@ -13,7 +13,6 @@ from dice import dungeon_dice_roll
 from combat_utilities import check_player_health, get_attack_response
 import yaml
 from models.PlayerCharacter import PlayerCharacter
-from BaseDrawing import draw_square
 # import requests
 
 # base_url = "https://discord.com/oauth2/token"
@@ -22,12 +21,21 @@ from BaseDrawing import draw_square
 # class Token():
 #     def __init__(self):
 #         load_dotenv()
+#         API_ENDPOINT = 'https://discord.com/api/v10'
 #         self.client_id = os.environ.get("CLIENT_ID")
-#         self.permissions = os.environ.get("PERMISSIONS")
-#         self.discord_token = os.environ.get("DISCORD_TOKEN")
-#         request = requests.post(f"{base_url}client_id={self.client_id}&permissions={self.permissions}&scope={scope}").json()
+#         self.client_secret = os.environ.get("CLIENT_SECRET")
+#         # self.permissions = os.environ.get("PERMISSIONS")
+#         # self.discord_token = os.environ.get("DISCORD_TOKEN")
+#         data = {
+#             'grant_type': 'client_credentials',
+#             'scope': 'identify connections'
+#         }
+#         headers = {
+#             'Content-Type': 'application/x-www-form-urlencoded'
+#         }
+#         request = requests.post('%s/oauth2/token' % API_ENDPOINT, data=data, headers=headers, auth=(self.client_id, self.client_secret))
 #         print(request['access_token'])
-#         self.token = request.access_tokens
+#         self.token = request.access_token
 
 class MyClient(commands.Bot, discord.Client):
     def __init__(self):
@@ -183,6 +191,7 @@ async def fast_create_character(ctx):
     f" We all yearn for someguy. I hope you find yours.\n\n" + 
 
     f"Good luck out there. Don’t die okay?")
+    # create logic that asks player for the house name and save it to the database
     c1 = []
     c1.append(characterName)
     c1.append(discord_name)
@@ -235,6 +244,7 @@ async def load_character_options(ctx):
 @client.command()
 async def load_character(ctx, *, arg):
     disc_name = str(ctx.message.author)
+    homes = []
     character = await load_selected_character(arg, disc_name)
     print(type(character))
     character = character[0]
@@ -246,6 +256,8 @@ async def load_character(ctx, *, arg):
     print(channel.name)
     new_character = PlayerCharacter(disc_name, character.char_name, character.speed, character.damage, character.defense, character.health)
     client.characters.append(new_character)
+    homes = select_homes(disc_name)
+    print(f"These are homes: #{homes}")
     await channel.send(
         f"character name: {character.char_name}\n" + 
         f"first class: {character.first_class}\n" + 
@@ -260,6 +272,8 @@ async def load_character(ctx, *, arg):
         f"damage: {character.damage}\n" +
         f"defense: {character.defense}\n" +
         f"health: {character.health}")
+    await ctx.send("You've played before! Which house are you living in these days?")
+    await ctx.send('\n'.join(homes))
     pass
 
 @client.command()
@@ -388,7 +402,21 @@ async def start_combat(ctx):
                         mons.remove(monster)
                         await ctx.send(f"You killed {monster.name}! This is a small win but keep your head in the fight!")
     await ctx.send(f"You've killed all of the monsters! You cleared the dungeon!")
+    # give loot here
+    # how will I keep track of the loot? database...
+    # a player owns a base? a group owns a base?
+    # when loot is earned by a group is automatically added to the base inventory
     client.dungeons[len(client.dungeons) - 1].rooms[client.dungeon_room].monsters = []
+
+@client.command()
+async def list_loot(ctx):
+    with open('dungeon_loot.yml', 'r') as file:
+        dungeon_loot = yaml.safe_load(file)
+    biomes = ["common", "Enki", "Ahab", "Kirkjufell", "Air"]
+        # print(f"{dungeon_loot[0]['house_materials']}")
+    for biome in biomes:
+        await ctx.send('\n'.join(dungeon_loot[biome]['house materials']))
+        
 
 # @client.command()
 # async def draw_stables(ctx):

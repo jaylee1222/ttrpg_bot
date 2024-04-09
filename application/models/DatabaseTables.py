@@ -1,4 +1,4 @@
-from sqlalchemy import Integer, String, ForeignKey, create_engine, MetaData, DateTime
+from sqlalchemy import Integer, String, ForeignKey, create_engine, MetaData, DateTime, ARRAY
 from sqlalchemy.orm import Mapped, mapped_column, DeclarativeBase
 from datetime import datetime
 
@@ -7,6 +7,21 @@ metadata_obj = MetaData()
 
 class Base (DeclarativeBase):
     metadata_obj = MetaData()
+
+class PlayerHome(Base):
+    __tablename__ = "PlayerHomes"
+    metadata_obj
+    home_id: Mapped[int] = mapped_column(primary_key=True)
+    home_name: Mapped[str] = mapped_column(String(20))
+    player_owner: Mapped[int] = mapped_column(ForeignKey("Players.player_id"))
+    gear_items: Mapped[str] = mapped_column(String(999))
+    wood: Mapped[int] = mapped_column(Integer)
+    stone: Mapped[int] = mapped_column(Integer)
+    def __init__(self, player_owner, gear_items, wood, stone):
+        self.player_owner = player_owner
+        self.gear_items = gear_items
+        self.wood = wood
+        self.stone = stone
 
 class Player(Base):
     __tablename__ = "Players"

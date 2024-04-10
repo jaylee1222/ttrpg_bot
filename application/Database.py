@@ -43,7 +43,7 @@ def select_characters(player):
         player_chars.append(char_info)
     return player_chars
 
-def select_homes(player):
+async def select_homes(player):
     engine = database_connection()
     player_homes = []
     session = Session(engine)

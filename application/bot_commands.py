@@ -253,7 +253,7 @@ async def load_character_options(ctx):
 async def load_housing_options(ctx):
     choices = []
     disc_name = str(ctx.message.author)
-    homes = select_homes(disc_name)
+    homes = await select_homes(disc_name)
     if (len(homes) <= 0):
         await ctx.send(f"Looks like you don't have a home here amongst the delves...you should try creating your own gang to be given a home amonst the delves")
         return
@@ -279,7 +279,7 @@ async def load_character(ctx, *, arg):
     print(channel.name)
     new_character = PlayerCharacter(disc_name, character.char_name, character.speed, character.damage, character.defense, character.health)
     client.characters.append(new_character)
-    homes = select_homes(disc_name)
+    homes = await select_homes(disc_name)
     print(f"These are homes: #{homes}")
     await channel.send(
         f"character name: {character.char_name}\n" + 
@@ -309,6 +309,8 @@ async def end_session(ctx):
         channel = await get_channel(ctx, client, "text", char.character_name)
         await channel.delete()
     client.characters.clear()
+    client.dungeons.clear()
+    client.dungeon_room = 0
     await ctx.send("Thank you for playing!")
 
 @client.command(name="partyCreate")
@@ -397,6 +399,8 @@ async def start_combat(ctx):
                     damage = await guy.attack(player)
                     player.health -= damage
                     await ctx.send(f"{guy.name} has attacked {player.character_name} for {damage} damage!")
+                    # send to players how much health player has remaining this will allow players to know when to use items
+                    # need to put item use and items into the game
                     if player.health < 0:
                         player.health = 0
                     if player.health == 0:
@@ -423,11 +427,12 @@ async def start_combat(ctx):
                         print(f"{monster.name} has been killed with health: {monster.health}")
                         mons.remove(monster)
                         await ctx.send(f"You killed {monster.name}! This is a small win but keep your head in the fight!")
-    await ctx.send(f"You've killed all of the monsters! You cleared the dungeon! You've been awarded {loot}!")
+    await ctx.send(f"You've killed all of the monsters! You cleared the dungeon! You've been awarded {', '.join(str(item) for item in loot)}!")
     # give loot here
     # how will I keep track of the loot? database...
     # a player owns a base? a group owns a base?
     # when loot is earned by a group is automatically added to the base inventory
+    # at the end of the dungeon list all of the loot gathered from all of the rooms
     client.dungeons[len(client.dungeons) - 1].rooms[client.dungeon_room].monsters = []
 
 @client.command()

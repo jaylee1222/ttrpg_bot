@@ -16,8 +16,9 @@ class DungeonRoom:
         biome_items = []
         common_loot_num = 0
         biome_loot_num = 0
+        
         for monster in monsters:
-            if monster in dungeon_monsters['common']['monsters']:
+            if monster.name in dungeon_monsters['common']['monsters']:
                 common_loot_num += 1
             else:
                 biome_loot_num += 1

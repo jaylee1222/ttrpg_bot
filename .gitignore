@@ -7,8 +7,15 @@ bin/
 *.db
 include/
 
+# PC Files for Dev
+ttrpg_bot.code-workspace
+ttrpg_bot/lib64
+
 # C extensions
 *.so
+
+# venv dir
+ttrpg_bot/
 
 # Distribution / packaging
 .Python

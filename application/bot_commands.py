@@ -5,7 +5,7 @@ import discord
 from discord.ext import commands
 from DiscordUtilities import get_channel
 from CharacterCreation import get_name_response, get_weapon_response, generate_character_traits, generate_personality, generate_speed, generate_class
-from Database import insert, select_characters, load_selected_character, select_homes
+from Database import insert, select_characters, load_selected_character, select_homes, update_home
 from models.DatabaseTables import Player, Character
 from models.Dungeon import Dungeon
 from models.Monster import Monster
@@ -263,6 +263,12 @@ async def load_housing_options(ctx):
         choices.append(home[0].home_name)
     await ctx.send('\n'.join(choices))
     pass
+
+@client.command()
+async def change_house_name(ctx, house_name, new_house_name):
+    disc_name = str(ctx.message.author)
+    home_info = await update_home(house_name, new_house_name, disc_name)
+    print(f"this is the home statement: {', '.join(str(item) for item in home_info[0])}")
 
 @client.command()
 async def load_character(ctx, *, arg):

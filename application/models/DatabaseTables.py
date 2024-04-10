@@ -13,7 +13,6 @@ class PlayerHome(Base):
     metadata_obj
     home_id: Mapped[int] = mapped_column(primary_key=True)
     home_name: Mapped[str] = mapped_column(String(20))
-    player_owner: Mapped[int] = mapped_column(ForeignKey("Players.player_id"))
     gear_items: Mapped[str] = mapped_column(String(999))
     wood: Mapped[int] = mapped_column(Integer)
     stone: Mapped[int] = mapped_column(Integer)
@@ -38,11 +37,10 @@ class PlayerHome(Base):
     porous_stone: Mapped[int] = mapped_column(Integer)
     dandelion: Mapped[int] = mapped_column(Integer)
     cotton_candy: Mapped[int] = mapped_column(Integer)
-    def __init__(self, home_name, player_owner, gear_items, wood = 0, stone = 0, raw_monster_meat = 0, primordial_crystal = 0, daisies = 0, fire_crystal = 0, fire_stone = 0, 
+    def __init__(self, home_name, gear_items = '', wood = 0, stone = 0, raw_monster_meat = 0, primordial_crystal = 0, daisies = 0, fire_crystal = 0, fire_stone = 0, 
                  flame_crysanthemum = 0, flame_broiled_monster_liver = 0, water_crystal = 0, seaweed_covered_stone = 0, driftwood = 0, water_chestnut = 0, raw_salmon = 0, 
                  earth_crystal = 0, moss_covered_stone = 0, synthflower = 0, carrot = 0, sunflower = 0, air_crystal = 0, porous_stone = 0, dandelion = 0, cotton_candy = 0):
         self.home_name = home_name
-        self.player_owner = player_owner
         self.gear_items = gear_items
         self.wood = wood
         self.stone = stone
@@ -74,9 +72,11 @@ class Player(Base):
     player_id: Mapped[int] = mapped_column(primary_key=True)
     disc_name: Mapped[str] = mapped_column(String(25))
     character: Mapped[int] = mapped_column(ForeignKey("Characters.char_id"))
-    def __init__(self, disc_name, character):
+    playerHome: Mapped[int] = mapped_column(ForeignKey("PlayerHomes.home_id"))
+    def __init__(self, disc_name, character, playerHome):
         self.disc_name = disc_name
         self.character = character
+        self.playerHome = playerHome
 
 class Character(Base):
     __tablename__ = "Characters"

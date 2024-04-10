@@ -2,7 +2,7 @@
 from datetime import datetime
 import sqlalchemy as db
 from models.DatabaseTables import Player, Character, PlayerHome
-from sqlalchemy import inspect, select, insert, create_engine, MetaData, and_
+from sqlalchemy import inspect, select, insert, create_engine, MetaData, and_, update
 from sqlalchemy.orm import Session
 
 def database_connection():
@@ -22,14 +22,14 @@ def insert(person, character):
         session.commit()
         session.refresh(characterModel)
         print(f"id of the inserted row is {characterModel.char_id}")
-    playerModel = Player(disc_name=person[0], character=characterModel.char_id)
-    with Session(engine) as session:
-        session.add(playerModel)
-        session.commit()
-        session.refresh(playerModel)
-    player_home = PlayerHome(player_owner = playerModel.player_id, home_name = 'The Farm', gear_items = '')
+    player_home = PlayerHome(home_name = 'The Farm')
     with Session(engine) as session:
         result = session.add(player_home)
+        session.commit()
+        session.refresh(player_home)
+    playerModel = Player(disc_name=person[0], character=characterModel.char_id, playerHome=player_home.home_id)
+    with Session(engine) as session:
+        session.add(playerModel)
         session.commit()
 
 def select_characters(player):
@@ -64,3 +64,16 @@ async def load_selected_character(desired_char_name, player):
         if result != None:
             print(f"this is from database: {type(char_info)}")
             return char_info
+        
+async def update_home(home, updates, player):
+    engine = database_connection()
+    home_statement = select(PlayerHome).where(PlayerHome.home_name == home)
+    print(f"this is the updates {home} {updates}")
+    update = PlayerHome(home_name=updates)
+    with Session(engine) as session:
+        home_info = session.execute(home_statement).fetchone()
+        return home_info
+        # stmt = update(PlayerHome).where(and_(Player.disc_name == player, Player.playerHome == home_info[0].home_id)).values(update)
+        # result = session.execute(stmt)
+        # if result != None:
+        #     print(result)

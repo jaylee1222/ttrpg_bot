@@ -4,16 +4,16 @@ from dotenv import load_dotenv
 import discord
 from discord.ext import commands
 from DiscordUtilities import get_channel
-from CharacterCreation import get_name_response, get_weapon_response, generate_character_traits, generate_personality, generate_speed, generate_class
-from Database import insert, select_characters, load_selected_character, select_homes, update_home
-from models.DatabaseTables import Player, Character
+from CharacterCreation import get_name_response, get_weapon_response, generate_character_traits, generate_personality, generate_speed, generate_class, get_home_response
+from Database import insert, select_characters, load_selected_character, select_homes, update_home, select_char_home
+from models.DatabaseTables import updatePlayerHome, PlayerHome
 from models.Dungeon import Dungeon
 from models.Monster import Monster
 from dice import dungeon_dice_roll
 from combat_utilities import check_player_health, get_attack_response
 import yaml
 from models.PlayerCharacter import PlayerCharacter
-import sys
+import time
 # import requests
 
 # base_url = "https://discord.com/oauth2/token"
@@ -45,6 +45,7 @@ class MyClient(commands.Bot, discord.Client):
         # self.DISCORD_TOKEN = Token().token
         intents = discord.Intents.default()
         intents.message_content = True
+        self.home = ''
         self.characters = []
         self.dungeons = []
         self.dungeon_room = 0
@@ -191,10 +192,11 @@ async def fast_create_character(ctx):
     f" In the Hamlet you are a {occupationChoice} it would seem. But yes, deeper still, you yearn for… {aspirationChoice}." + 
     f" We all yearn for someguy. I hope you find yours.\n\n" + 
 
-    f"Good luck out there. Don’t die okay?")
+    f"Good luck out there. Don’t die okay?\n\n")
+    time.sleep(2)
     await ctx.send(f"You know...there's a space out on the edge of town...nobody is staying there and honestly. I just don't have space for you here." +
-                   " This might be the perfect spot for you and your gang to call home! It's called 'The Farm'! You and your gang can rename it to" +
-                   " whatever you would like.")
+                   " This might be the perfect spot for you and your gang to call home! What would you and your friends like to name this?")
+    baseName = await get_home_response(client=client, ctx=ctx)
     # create logic that asks player for the house name and save it to the database
     c1 = []
     c1.append(characterName)
@@ -213,11 +215,13 @@ async def fast_create_character(ctx):
     c1.append(health)
     p1 = []
     p1.append(discord_name)
-    insert(p1, c1)
+    home = PlayerHome(home_name=baseName)
+    insert(p1, c1, home)
     await create_channel(ctx, characterName)
     channel = await get_channel(ctx, client, "text", characterName)
     new_character = PlayerCharacter(discord_name, characterName, speed, damage, defense, health)
     client.characters.append(new_character)
+    client.home = home
     await channel.send(
         f"character name: {c1[0]}\n" + 
         f"first class: {c1[2]}\n" + 
@@ -260,15 +264,16 @@ async def load_housing_options(ctx):
     else:
         await ctx.send("You've played before! Which house are you living in these days?")
     for home in homes:
-        choices.append(home[0].home_name)
+        choices.append(home.home_name)
     await ctx.send('\n'.join(choices))
     pass
 
 @client.command()
 async def change_house_name(ctx, house_name, new_house_name):
     disc_name = str(ctx.message.author)
-    home_info = await update_home(house_name, new_house_name, disc_name)
-    print(f"this is the home statement: {', '.join(str(item) for item in home_info[0])}")
+    updatedName = updatePlayerHome(home_name=new_house_name)
+    await update_home(house_name, updatedName, disc_name)
+    # print(home_info.scalars)
 
 @client.command()
 async def load_character(ctx, *, arg):
@@ -285,10 +290,10 @@ async def load_character(ctx, *, arg):
     print(channel.name)
     new_character = PlayerCharacter(disc_name, character.char_name, character.speed, character.damage, character.defense, character.health)
     client.characters.append(new_character)
-    homes = await select_homes(disc_name)
-    print(f"These are homes: #{homes}")
+    client.home = await select_char_home(disc_name, arg)
     await channel.send(
         f"character name: {character.char_name}\n" + 
+        f"home name: {client.home.home_name}\n" +
         f"first class: {character.first_class}\n" + 
         f"second class: {character.second_class}\n" + 
         f"weapon: {character.weapon}\n" +

@@ -1,5 +1,6 @@
 import asyncio
 import random
+from Database import select_homes_on_home_name
 
 response_timeout = 10.0
 async def get_name_response(client, ctx):
@@ -16,7 +17,8 @@ async def get_name_response(client, ctx):
 async def get_home_response(client, ctx):
     def check(m):
         print(m.content)
-        return isinstance(m.content, str)
+        name_exists = True if select_homes_on_home_name(str(m.content)) else False
+        return isinstance(m.content, str) and name_exists
     try:
         response = await client.wait_for('message', check=check, timeout=response_timeout)
         print(response.content)

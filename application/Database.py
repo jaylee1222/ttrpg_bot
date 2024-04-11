@@ -1,7 +1,7 @@
 # import sqlite3
 from datetime import datetime
 import sqlalchemy as db
-from models.DatabaseTables import Player, Character, PlayerHome
+from models.DatabaseTables import Player, Character, PlayerHome, updatePlayerHome
 from sqlalchemy import inspect, select, insert, create_engine, MetaData, and_, update
 from sqlalchemy.orm import Session
 
@@ -13,7 +13,7 @@ def database_connection():
 
     return engine
 
-def insert(person, character):
+def insert(person, character, home):
     traits = ', '.join(character[7])
     engine = database_connection()
     characterModel = Character(time_created = datetime.now(), char_name = character[0], first_class=character[2], second_class=character[3], weapon=character[4], weapon_element=character[5], armor=character[6], personality=traits, occupation=character[8], aspiration=character[9], speed=character[10], damage=character[11], defense=character[12], health=character[13])
@@ -22,12 +22,11 @@ def insert(person, character):
         session.commit()
         session.refresh(characterModel)
         print(f"id of the inserted row is {characterModel.char_id}")
-    player_home = PlayerHome(home_name = 'The Farm')
     with Session(engine) as session:
-        result = session.add(player_home)
+        result = session.add(home)
         session.commit()
-        session.refresh(player_home)
-    playerModel = Player(disc_name=person[0], character=characterModel.char_id, playerHome=player_home.home_id)
+        session.refresh(home)
+    playerModel = Player(disc_name=person[0], character=characterModel.char_id, playerHome=home.home_id)
     with Session(engine) as session:
         session.add(playerModel)
         session.commit()
@@ -47,12 +46,30 @@ async def select_homes(player):
     engine = database_connection()
     player_homes = []
     session = Session(engine)
-    ids = select(Player).where(Player.disc_name == player)
-    for id in session.scalars(ids):
-        homes = select(PlayerHome).where(PlayerHome.home_id == id.player_id)
-        home_info = session.execute(homes).fetchone()
-        player_homes.append(home_info)
+    home_statement = select(Player, PlayerHome).join(PlayerHome).where(Player.disc_name == player).order_by(Player.player_id, PlayerHome.home_id)
+    with Session(engine) as session:
+        home_info = session.execute(home_statement).fetchall()
+        for player, home in home_info:
+            player_homes.append(home)
     return player_homes
+
+async def select_char_home(player, char):
+    engine = database_connection()
+    session = Session(engine)
+    home_statement = select(Player, PlayerHome).join(PlayerHome).join(Character).where(Player.disc_name == player).where(Character.char_name == char).order_by(Player.player_id, PlayerHome.home_id)
+    with Session(engine) as session:
+        player, home = session.execute(home_statement).fetchone()
+    return home
+
+async def select_homes_on_home_name(home_name):
+    engine = database_connection()
+    player_homes = []
+    session = Session(engine)
+    home_statement = select(Player, PlayerHome).join(PlayerHome).where(PlayerHome.home_name == home_name).order_by(Player.player_id, PlayerHome.home_id)
+    with Session(engine) as session:
+        home_info = session.execute(home_statement).fetchall()
+    if (len(home_info) > 0):
+        return False
 
 async def load_selected_character(desired_char_name, player):
     engine = database_connection()
@@ -65,15 +82,12 @@ async def load_selected_character(desired_char_name, player):
             print(f"this is from database: {type(char_info)}")
             return char_info
         
-async def update_home(home, updates, player):
+async def update_home(home, new_home_data, player):
     engine = database_connection()
-    home_statement = select(PlayerHome).where(PlayerHome.home_name == home)
-    print(f"this is the updates {home} {updates}")
-    update = PlayerHome(home_name=updates)
+    home_statement = select(Player, PlayerHome).join(PlayerHome).where(Player.disc_name == player)\
+                    .where(PlayerHome.home_name == home)\
+                    .order_by(Player.player_id, PlayerHome.home_id)
     with Session(engine) as session:
-        home_info = session.execute(home_statement).fetchone()
-        return home_info
-        # stmt = update(PlayerHome).where(and_(Player.disc_name == player, Player.playerHome == home_info[0].home_id)).values(update)
-        # result = session.execute(stmt)
-        # if result != None:
-        #     print(result)
+        returned_player, returned_home = session.execute(home_statement).fetchone()
+        session.query(PlayerHome).filter(PlayerHome.home_id == returned_home.home_id).update(new_home_data.__dict__)
+        session.commit()

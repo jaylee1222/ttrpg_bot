@@ -7,6 +7,9 @@ bin/
 *.db
 include/
 
+# Mac Files
+.DS_Store
+
 # PC Files for Dev
 ttrpg_bot.code-workspace
 ttrpg_bot/lib64

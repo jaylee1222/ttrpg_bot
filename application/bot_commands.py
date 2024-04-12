@@ -5,7 +5,7 @@ import discord
 from discord.ext import commands
 from DiscordUtilities import get_channel
 from CharacterCreation import get_name_response, get_weapon_response, generate_character_traits, generate_personality, generate_speed, generate_class, get_home_response
-from Database import insert, select_characters, load_selected_character, select_homes, update_home, select_char_home
+from Database import insert, select_characters, load_selected_character, select_homes, update_home, select_char_home, select_homes_on_home_name
 from models.DatabaseTables import updatePlayerHome, PlayerHome
 from models.Dungeon import Dungeon
 from models.Monster import Monster
@@ -196,8 +196,11 @@ async def fast_create_character(ctx):
     time.sleep(2)
     await ctx.send(f"You know...there's a space out on the edge of town...nobody is staying there and honestly. I just don't have space for you here." +
                    " This might be the perfect spot for you and your gang to call home! What would you and your friends like to name this?")
+    
+    # need to figure out a way to implement this check logic. check method in 'get_home_response' can't be async
+    # name_exists = True if await select_homes_on_home_name(str(ctx.message.content)) else False
+    # if name_exists: await ctx.send(f"that name already exists for a home, we can't have two houses named that!")
     baseName = await get_home_response(client=client, ctx=ctx)
-    # create logic that asks player for the house name and save it to the database
     c1 = []
     c1.append(characterName)
     c1.append(discord_name)
@@ -223,12 +226,13 @@ async def fast_create_character(ctx):
     client.characters.append(new_character)
     client.home = home
     await channel.send(
-        f"character name: {c1[0]}\n" + 
-        f"first class: {c1[2]}\n" + 
-        f"second class: {c1[3]}\n" + 
+        f"character name: {c1[0]}\n" +
+        f"home name: {client.home.home_name}\n" +
+        f"first class: {c1[2]}\n" +
+        f"second class: {c1[3]}\n" +
         f"weapon: {c1[4]}\n" +
         f"weapon element: {c1[5]}\n" +
-        f"armor: {c1[6]}\n" + 
+        f"armor: {c1[6]}\n" +
         f"personality: {c1[7][0]}, {c1[7][1]}, {c1[7][2]}\n" +
         f"occupation: {c1[8]}\n" +
         f"aspiration: {c1[9]}\n" +
@@ -416,7 +420,7 @@ async def start_combat(ctx):
                         player.health = 0
                     if player.health == 0:
                         players.remove(player)
-                        await ctx.send(f"Oh no! Your party number dwindles. {player.character_name} has fallen. {guy.name} has attacked {player} for {damage} damage!")
+                        await ctx.send(f"Oh no! Your party number dwindles. {player.character_name} has fallen. {guy.name} has slain {player.character_name} with {damage} damage!")
                 elif isinstance(guy, PlayerCharacter):
                     monster_names.clear()
                     print(f"it is {guy.character_name}'s turn")
@@ -438,12 +442,13 @@ async def start_combat(ctx):
                         print(f"{monster.name} has been killed with health: {monster.health}")
                         mons.remove(monster)
                         await ctx.send(f"You killed {monster.name}! This is a small win but keep your head in the fight!")
-    await ctx.send(f"You've killed all of the monsters! You cleared the dungeon! You've been awarded {', '.join(str(item) for item in loot)}!")
+    await ctx.send(f"You've killed all of the monsters! You cleared the dungeon! You've been awarded {', '.join(str(item.replace('_', ' ')) for item in loot)}!")
     # give loot here
     # how will I keep track of the loot? database...
     # a player owns a base? a group owns a base?
     # when loot is earned by a group is automatically added to the base inventory
     # at the end of the dungeon list all of the loot gathered from all of the rooms
+
     client.dungeons[len(client.dungeons) - 1].rooms[client.dungeon_room].monsters = []
 
 @client.command()

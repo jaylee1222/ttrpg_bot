@@ -3,32 +3,32 @@ common:
   house materials:
     - wood
     - stone
-    - raw monster meat
-    - primordial crystal
+    - raw_monster_meat
+    - primordial_crystal
     - daisies
 Enki:
   house materials:
-    - fire crystal
-    - fire stone
-    - flame crysanthemum
-    - flame broiled monster liver
+    - fire_crystal
+    - fire_stone
+    - flame_crysanthemum
+    - flame_broiled_monster_liver
 Ahab:
   house materials:
-    - water crystal
-    - seaweed-covered stone
+    - water_crystal
+    - seaweed_covered_stone
     - driftwood
-    - water chestnut
-    - raw salmon
+    - water_chestnut
+    - raw_salmon
 Kirkjufell:
   house materials:
-    - earth crystal
-    - moss-covered stone
+    - earth_crystal
+    - moss_covered_stone
     - synthflower
     - carrot
     - sunflower
 Air:
   house materials:
-    - air crystal
-    - porous stone
+    - air_crystal
+    - porous_stone
     - dandelion
-    - cotton candy
+    - cotton_candy

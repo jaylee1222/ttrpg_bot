@@ -6,9 +6,10 @@ from models.DungeonRoom import DungeonRoom
 
 @asyncinit
 class Dungeon:
-    async def __init__(self, size) -> None:
+    async def __init__(self, size, player_owner) -> None:
         self.biome = await self.choose_biome()
         self.size = size
+        self.player_owner = player_owner
         self.room_mons = await self.populate_dungeon()
         self.rooms = await self.populate_rooms()
 

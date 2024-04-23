@@ -9,10 +9,10 @@ class Base(DeclarativeBase):
     metadata_obj = MetaData()
 
 class updatePlayerHome():
-    def __init__(self, home_name = '', gear_items = '', wood = 0, stone = 0, raw_monster_meat = 0, primordial_crystal = 0, daisies = 0,
-                 fire_crystal = 0, fire_stone = 0, flame_crysanthemum = 0, flame_broiled_monster_liver = 0, water_crystal = 0, seaweed_covered_stone = 0,
-                 driftwood = 0, water_chestnut = 0, raw_salmon = 0, earth_crystal = 0, moss_covered_stone = 0, synthflower = 0,
-                 carrot = 0, sunflower = 0, air_crystal = 0, porous_stone = 0, dandelion = 0, cotton_candy = 0):
+    def __init__(self, home_name, wood, stone, raw_monster_meat, primordial_crystal, daisies,
+                 fire_crystal, fire_stone, flame_crysanthemum, flame_broiled_monster_liver, water_crystal, seaweed_covered_stone,
+                 driftwood, water_chestnut, raw_salmon, earth_crystal, moss_covered_stone, synthflower,
+                 carrot, sunflower, air_crystal, porous_stone, dandelion, cotton_candy, gear_items = ''):
         self.home_name = home_name
         self.gear_items = gear_items
         self.wood = wood
@@ -38,6 +38,10 @@ class updatePlayerHome():
         self.porous_stone = porous_stone
         self.dandelion = dandelion
         self.cotton_candy = cotton_candy
+    def __str__(self):
+        return f"{self.home_name}, {self.gear_items} , {self.wood}, {self.stone}, {self.raw_monster_meat}, {self.primordial_crystal}, {self.daisies}, {self.fire_crystal}, {self.fire_stone}, "\
+                 f"{self.flame_crysanthemum}, {self.flame_broiled_monster_liver}, {self.water_crystal}, {self.seaweed_covered_stone}, {self.driftwood}, {self.water_chestnut}, {self.raw_salmon}, "\
+                 f"{self.earth_crystal}, {self.moss_covered_stone}, {self.synthflower}, {self.carrot}, {self.sunflower}, {self.air_crystal}, {self.porous_stone}, {self.dandelion}, {self.cotton_candy}"
 
 class PlayerHome(Base):
     __tablename__ = "PlayerHomes"
@@ -96,7 +100,14 @@ class PlayerHome(Base):
         self.porous_stone = porous_stone
         self.dandelion = dandelion
         self.cotton_candy = cotton_candy
-
+    def __str__(self):
+        return f"{self.home_name}, {self.gear_items} , {self.wood}, {self.stone}, {self.raw_monster_meat}, {self.primordial_crystal}, {self.daisies}, {self.fire_crystal}, {self.fire_stone}, "\
+                 f"{self.flame_crysanthemum}, {self.flame_broiled_monster_liver}, {self.water_crystal}, {self.seaweed_covered_stone}, {self.driftwood}, {self.water_chestnut}, {self.raw_salmon}, "\
+                 f"{self.earth_crystal}, {self.moss_covered_stone}, {self.synthflower}, {self.carrot}, {self.sunflower}, {self.air_crystal}, {self.porous_stone}, {self.dandelion}, {self.cotton_candy}"
+    def __getitem__(self, item):
+        return getattr(self, item)
+    def __setitem__(self, item, value):
+        return setattr(self, item, value)
 class Player(Base):
     __tablename__ = "Players"
     metadata_obj

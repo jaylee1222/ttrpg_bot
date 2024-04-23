@@ -135,7 +135,7 @@ async def create_character(ctx):
 
 @client.command(name="fastCreateCharacter")
 async def fast_create_character(ctx):
-    with open('character_creation.yml', 'r') as file:
+    with open('config_files/character_creation.yml', 'r') as file:
         character_create_options = yaml.safe_load(file)
     weaponList = None
     weaponElementList = None
@@ -273,11 +273,31 @@ async def load_housing_options(ctx):
     pass
 
 @client.command()
+async def load_party_housing_options(ctx):
+    choices = []
+    disc_name = str(ctx.message.author)
+    for player in client.characters:
+        home = await select_char_home(player.player_name, player.character_name)
+        choices.append(home.home_name)
+    if (len(choices) <= 0):
+        await ctx.send(f"Looks like you don't have a home here amongst the delves...you should try creating your own gang to be given a home amonst the delves")
+        return
+    else:
+        await ctx.send("These are your options as a party! Where would y'all like to settle down?")
+    await ctx.send('\n'.join(choices))
+    pass
+
+@client.command()
+async def set_primary_home(ctx, house_name):
+    client.home = await select_homes_on_home_name(str(house_name))
+    await ctx.send(f"You've set the primary home of the party to {client.home.home_name}!")
+
+@client.command()
 async def change_house_name(ctx, house_name, new_house_name):
     disc_name = str(ctx.message.author)
     updatedName = updatePlayerHome(home_name=new_house_name)
-    await update_home(house_name, updatedName, disc_name)
-    # print(home_info.scalars)
+    homeName = {"home_name": str(new_house_name)}
+    await update_home(house_name, homeName, disc_name)
 
 @client.command()
 async def load_character(ctx, *, arg):
@@ -354,7 +374,8 @@ async def get_members(ctx):
 
 @client.command()
 async def create_dungeon(ctx):
-    dungeon = await Dungeon(4)
+    disc_name = str(ctx.message.author)
+    dungeon = await Dungeon(4, disc_name)
     client.dungeons.append(dungeon)
     await ctx.send(f"the first dungeon is {dungeon.biome}, each room will have this number of monsters: {dungeon.room_mons[0]}, {dungeon.room_mons[1]}, {dungeon.room_mons[2]}, {dungeon.room_mons[3]} and the size is {dungeon.size}")
     pass
@@ -388,6 +409,16 @@ async def start_combat(ctx):
     players = client.characters
     mons = client.dungeons[len(client.dungeons) - 1].rooms[client.dungeon_room].monsters
     loot = client.dungeons[len(client.dungeons) - 1].rooms[client.dungeon_room].building_mat_loot
+    dungeon_owner = client.dungeons[len(client.dungeons) - 1].player_owner
+    list_of_materials = []
+    material_text = []
+    loot_count = {}
+    with open('config_files/dungeon_loot.yml', 'r') as file:
+        dungeon_loot = yaml.safe_load(file)
+    biomes = ["common", "Enki", "Ahab", "Kirkjufell", "Air"]
+    for i in range(len(biomes)):
+        for j in range(len(dungeon_loot[biomes[i]]['house materials'])):
+            list_of_materials.append(dungeon_loot[biomes[i]]['house materials'][j])
     combat_order = [*players, *mons]
     monster_names = []
     combat_order.sort(key=lambda x: int(x.speed), reverse=True)
@@ -442,7 +473,41 @@ async def start_combat(ctx):
                         print(f"{monster.name} has been killed with health: {monster.health}")
                         mons.remove(monster)
                         await ctx.send(f"You killed {monster.name}! This is a small win but keep your head in the fight!")
-    await ctx.send(f"You've killed all of the monsters! You cleared the dungeon! You've been awarded {', '.join(str(item.replace('_', ' ')) for item in loot)}!")
+
+    for material in list_of_materials:
+        if (loot.count(material) > 0):
+            loot_count.update({f"{material}": loot.count(material)})
+        else:
+            continue
+    print(loot_count)
+    for key, value in loot_count.items():
+        print(f"this is key: {key} and value: {value}")
+        if value > 1 and key == 'raw_salmon':
+            material_text.append(f"{value} {key.replace('_', ' ')}")
+        elif value > 1 and key != 'raw_salmon':
+            material_text.append(f"{value} {key.replace('_', ' ')}s")
+        else:
+            material_text.append(f"{value} {key.replace('_', ' ')}")
+
+    for key, value in loot_count.items():
+        print(f"{value} = {vars(client.home).get(key)} + {value}")
+        value += vars(client.home).get(key)
+        print(f"this is the new value: {value}")
+        loot_count[key] = value
+    print(client.characters[0])
+    await update_home(client.home.home_name, loot_count, dungeon_owner)
+    for player in client.characters:
+        home = await select_char_home(player.player_name, player.character_name)
+        if home.home_name == client.home.home_name:
+            print(f"set client.home to {home}")
+            client.home = home
+            break
+        else:
+            continue
+    await ctx.send("You've been awarded the following loot for winning the fight!")
+    await ctx.send('\n'.join(x for x in material_text))
+
+    # await ctx.send(f"You've killed all of the monsters! You cleared the dungeon! You've been awarded {f", {str(item.value)} ".join(str(item.key.replace('_', ' ')) for item in loot_count)}!")
     # give loot here
     # how will I keep track of the loot? database...
     # a player owns a base? a group owns a base?
@@ -450,16 +515,6 @@ async def start_combat(ctx):
     # at the end of the dungeon list all of the loot gathered from all of the rooms
 
     client.dungeons[len(client.dungeons) - 1].rooms[client.dungeon_room].monsters = []
-
-@client.command()
-async def list_loot(ctx):
-    with open('dungeon_loot.yml', 'r') as file:
-        dungeon_loot = yaml.safe_load(file)
-    biomes = ["common", "Enki", "Ahab", "Kirkjufell", "Air"]
-        # print(f"{dungeon_loot[0]['house_materials']}")
-    for biome in biomes:
-        await ctx.send('\n'.join(dungeon_loot[biome]['house materials']))
-        
 
 # @client.command()
 # async def draw_stables(ctx):

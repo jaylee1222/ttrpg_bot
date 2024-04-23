@@ -8,7 +8,7 @@ class DungeonRoom:
         self.item_loot = []
     
     async def generate_building_mat_loot(self, biome, num_mons):
-        with open('dungeon_loot.yml', 'r') as file:
+        with open('config_files/dungeon_loot.yml', 'r') as file:
             dungeon_loot_options = yaml.safe_load(file)
 
         common_loot = dungeon_loot_options['common']['house materials']

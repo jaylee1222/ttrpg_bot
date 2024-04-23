@@ -67,6 +67,15 @@ async def select_homes_on_home_name(home_name):
     session = Session(engine)
     home_statement = select(Player, PlayerHome).join(PlayerHome).where(PlayerHome.home_name == home_name).order_by(Player.player_id, PlayerHome.home_id)
     with Session(engine) as session:
+        player, home = session.execute(home_statement).fetchone()
+    return home
+
+async def check_for_homes(home_name):
+    engine = database_connection()
+    player_homes = []
+    session = Session(engine)
+    home_statement = select(Player, PlayerHome).join(PlayerHome).where(PlayerHome.home_name == home_name).order_by(Player.player_id, PlayerHome.home_id)
+    with Session(engine) as session:
         home_info = session.execute(home_statement).fetchall()
     if (len(home_info) > 0):
         return False
@@ -89,5 +98,5 @@ async def update_home(home, new_home_data, player):
                     .order_by(Player.player_id, PlayerHome.home_id)
     with Session(engine) as session:
         returned_player, returned_home = session.execute(home_statement).fetchone()
-        session.query(PlayerHome).filter(PlayerHome.home_id == returned_home.home_id).update(new_home_data.__dict__)
+        session.query(PlayerHome).filter(PlayerHome.home_id == returned_home.home_id).update(new_home_data)
         session.commit()

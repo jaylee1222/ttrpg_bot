@@ -3,7 +3,7 @@ from dice import weighted_dungeon_dice_roll, weighted_modifier_dice_roll
 from CharacterCreation import generate_speed
 import yaml
 
-with open('dungeon_attributes.yml', 'r') as file:
+with open('config_files/dungeon_attributes.yml', 'r') as file:
     attributes = yaml.safe_load(file)
 
 

@@ -4,16 +4,16 @@ from dotenv import load_dotenv
 import discord
 from discord.ext import commands
 from DiscordUtilities import get_channel
-from CharacterCreation import get_name_response, get_weapon_response, generate_character_traits, generate_personality, generate_speed, generate_class
-from Database import insert, select_characters, load_selected_character
-from models.DatabaseTables import Player, Character
+from CharacterCreation import get_name_response, get_weapon_response, generate_character_traits, generate_personality, generate_speed, generate_class, get_home_response
+from Database import insert, select_characters, load_selected_character, select_homes, update_home, select_char_home, select_homes_on_home_name
+from models.DatabaseTables import updatePlayerHome, PlayerHome
 from models.Dungeon import Dungeon
 from models.Monster import Monster
 from dice import dungeon_dice_roll
 from combat_utilities import check_player_health, get_attack_response
 import yaml
 from models.PlayerCharacter import PlayerCharacter
-from BaseDrawing import draw_square
+import time
 # import requests
 
 # base_url = "https://discord.com/oauth2/token"
@@ -22,12 +22,21 @@ from BaseDrawing import draw_square
 # class Token():
 #     def __init__(self):
 #         load_dotenv()
+#         API_ENDPOINT = 'https://discord.com/api/v10'
 #         self.client_id = os.environ.get("CLIENT_ID")
-#         self.permissions = os.environ.get("PERMISSIONS")
-#         self.discord_token = os.environ.get("DISCORD_TOKEN")
-#         request = requests.post(f"{base_url}client_id={self.client_id}&permissions={self.permissions}&scope={scope}").json()
+#         self.client_secret = os.environ.get("CLIENT_SECRET")
+#         # self.permissions = os.environ.get("PERMISSIONS")
+#         # self.discord_token = os.environ.get("DISCORD_TOKEN")
+#         data = {
+#             'grant_type': 'client_credentials',
+#             'scope': 'identify connections'
+#         }
+#         headers = {
+#             'Content-Type': 'application/x-www-form-urlencoded'
+#         }
+#         request = requests.post('%s/oauth2/token' % API_ENDPOINT, data=data, headers=headers, auth=(self.client_id, self.client_secret))
 #         print(request['access_token'])
-#         self.token = request.access_tokens
+#         self.token = request.access_token
 
 class MyClient(commands.Bot, discord.Client):
     def __init__(self):
@@ -36,6 +45,7 @@ class MyClient(commands.Bot, discord.Client):
         # self.DISCORD_TOKEN = Token().token
         intents = discord.Intents.default()
         intents.message_content = True
+        self.home = ''
         self.characters = []
         self.dungeons = []
         self.dungeon_room = 0
@@ -125,7 +135,7 @@ async def create_character(ctx):
 
 @client.command(name="fastCreateCharacter")
 async def fast_create_character(ctx):
-    with open('character_creation.yml', 'r') as file:
+    with open('config_files/character_creation.yml', 'r') as file:
         character_create_options = yaml.safe_load(file)
     weaponList = None
     weaponElementList = None
@@ -182,7 +192,15 @@ async def fast_create_character(ctx):
     f" In the Hamlet you are a {occupationChoice} it would seem. But yes, deeper still, you yearn for… {aspirationChoice}." + 
     f" We all yearn for someguy. I hope you find yours.\n\n" + 
 
-    f"Good luck out there. Don’t die okay?")
+    f"Good luck out there. Don’t die okay?\n\n")
+    time.sleep(2)
+    await ctx.send(f"You know...there's a space out on the edge of town...nobody is staying there and honestly. I just don't have space for you here." +
+                   " This might be the perfect spot for you and your gang to call home! What would you and your friends like to name this?")
+    
+    # need to figure out a way to implement this check logic. check method in 'get_home_response' can't be async
+    # name_exists = True if await select_homes_on_home_name(str(ctx.message.content)) else False
+    # if name_exists: await ctx.send(f"that name already exists for a home, we can't have two houses named that!")
+    baseName = await get_home_response(client=client, ctx=ctx)
     c1 = []
     c1.append(characterName)
     c1.append(discord_name)
@@ -200,18 +218,21 @@ async def fast_create_character(ctx):
     c1.append(health)
     p1 = []
     p1.append(discord_name)
-    insert(p1, c1)
+    home = PlayerHome(home_name=baseName)
+    insert(p1, c1, home)
     await create_channel(ctx, characterName)
     channel = await get_channel(ctx, client, "text", characterName)
     new_character = PlayerCharacter(discord_name, characterName, speed, damage, defense, health)
     client.characters.append(new_character)
+    client.home = home
     await channel.send(
-        f"character name: {c1[0]}\n" + 
-        f"first class: {c1[2]}\n" + 
-        f"second class: {c1[3]}\n" + 
+        f"character name: {c1[0]}\n" +
+        f"home name: {client.home.home_name}\n" +
+        f"first class: {c1[2]}\n" +
+        f"second class: {c1[3]}\n" +
         f"weapon: {c1[4]}\n" +
         f"weapon element: {c1[5]}\n" +
-        f"armor: {c1[6]}\n" + 
+        f"armor: {c1[6]}\n" +
         f"personality: {c1[7][0]}, {c1[7][1]}, {c1[7][2]}\n" +
         f"occupation: {c1[8]}\n" +
         f"aspiration: {c1[9]}\n" +
@@ -226,15 +247,62 @@ async def load_character_options(ctx):
     choices = []
     disc_name = str(ctx.message.author)
     characters = select_characters(disc_name)
-    await ctx.send(f"Oi, you've played before would you like to use one of your characters? Here are your choices:")
+    if (len(characters) <= 0):
+        await ctx.send(f"Looks like you've never played before, hon...go instantiate yourself in the delves to see who you truly are!")
+        return
+    else:
+        await ctx.send(f"Oi, you've played before would you like to use one of your characters? Here are your choices:")
     for character in characters:
         choices.append(character[0].char_name)
     await ctx.send('\n'.join(choices))
     pass
 
 @client.command()
+async def load_housing_options(ctx):
+    choices = []
+    disc_name = str(ctx.message.author)
+    homes = await select_homes(disc_name)
+    if (len(homes) <= 0):
+        await ctx.send(f"Looks like you don't have a home here amongst the delves...you should try creating your own gang to be given a home amonst the delves")
+        return
+    else:
+        await ctx.send("You've played before! Which house are you living in these days?")
+    for home in homes:
+        choices.append(home.home_name)
+    await ctx.send('\n'.join(choices))
+    pass
+
+@client.command()
+async def load_party_housing_options(ctx):
+    choices = []
+    disc_name = str(ctx.message.author)
+    for player in client.characters:
+        home = await select_char_home(player.player_name, player.character_name)
+        choices.append(home.home_name)
+    if (len(choices) <= 0):
+        await ctx.send(f"Looks like you don't have a home here amongst the delves...you should try creating your own gang to be given a home amonst the delves")
+        return
+    else:
+        await ctx.send("These are your options as a party! Where would y'all like to settle down?")
+    await ctx.send('\n'.join(choices))
+    pass
+
+@client.command()
+async def set_primary_home(ctx, house_name):
+    client.home = await select_homes_on_home_name(str(house_name))
+    await ctx.send(f"You've set the primary home of the party to {client.home.home_name}!")
+
+@client.command()
+async def change_house_name(ctx, house_name, new_house_name):
+    disc_name = str(ctx.message.author)
+    updatedName = updatePlayerHome(home_name=new_house_name)
+    homeName = {"home_name": str(new_house_name)}
+    await update_home(house_name, homeName, disc_name)
+
+@client.command()
 async def load_character(ctx, *, arg):
     disc_name = str(ctx.message.author)
+    homes = []
     character = await load_selected_character(arg, disc_name)
     print(type(character))
     character = character[0]
@@ -246,8 +314,10 @@ async def load_character(ctx, *, arg):
     print(channel.name)
     new_character = PlayerCharacter(disc_name, character.char_name, character.speed, character.damage, character.defense, character.health)
     client.characters.append(new_character)
+    client.home = await select_char_home(disc_name, arg)
     await channel.send(
         f"character name: {character.char_name}\n" + 
+        f"home name: {client.home.home_name}\n" +
         f"first class: {character.first_class}\n" + 
         f"second class: {character.second_class}\n" + 
         f"weapon: {character.weapon}\n" +
@@ -274,6 +344,8 @@ async def end_session(ctx):
         channel = await get_channel(ctx, client, "text", char.character_name)
         await channel.delete()
     client.characters.clear()
+    client.dungeons.clear()
+    client.dungeon_room = 0
     await ctx.send("Thank you for playing!")
 
 @client.command(name="partyCreate")
@@ -302,7 +374,8 @@ async def get_members(ctx):
 
 @client.command()
 async def create_dungeon(ctx):
-    dungeon = await Dungeon(4)
+    disc_name = str(ctx.message.author)
+    dungeon = await Dungeon(4, disc_name)
     client.dungeons.append(dungeon)
     await ctx.send(f"the first dungeon is {dungeon.biome}, each room will have this number of monsters: {dungeon.room_mons[0]}, {dungeon.room_mons[1]}, {dungeon.room_mons[2]}, {dungeon.room_mons[3]} and the size is {dungeon.size}")
     pass
@@ -335,6 +408,17 @@ async def start_combat(ctx):
     print("-----STARTING COMBAT----")
     players = client.characters
     mons = client.dungeons[len(client.dungeons) - 1].rooms[client.dungeon_room].monsters
+    loot = client.dungeons[len(client.dungeons) - 1].rooms[client.dungeon_room].building_mat_loot
+    dungeon_owner = client.dungeons[len(client.dungeons) - 1].player_owner
+    list_of_materials = []
+    material_text = []
+    loot_count = {}
+    with open('config_files/dungeon_loot.yml', 'r') as file:
+        dungeon_loot = yaml.safe_load(file)
+    biomes = ["common", "Enki", "Ahab", "Kirkjufell", "Air"]
+    for i in range(len(biomes)):
+        for j in range(len(dungeon_loot[biomes[i]]['house materials'])):
+            list_of_materials.append(dungeon_loot[biomes[i]]['house materials'][j])
     combat_order = [*players, *mons]
     monster_names = []
     combat_order.sort(key=lambda x: int(x.speed), reverse=True)
@@ -361,11 +445,13 @@ async def start_combat(ctx):
                     damage = await guy.attack(player)
                     player.health -= damage
                     await ctx.send(f"{guy.name} has attacked {player.character_name} for {damage} damage!")
+                    # send to players how much health player has remaining this will allow players to know when to use items
+                    # need to put item use and items into the game
                     if player.health < 0:
                         player.health = 0
                     if player.health == 0:
                         players.remove(player)
-                        await ctx.send(f"Oh no! Your party number dwindles. {player.character_name} has fallen. {guy.name} has attacked {player} for {damage} damage!")
+                        await ctx.send(f"Oh no! Your party number dwindles. {player.character_name} has fallen. {guy.name} has slain {player.character_name} with {damage} damage!")
                 elif isinstance(guy, PlayerCharacter):
                     monster_names.clear()
                     print(f"it is {guy.character_name}'s turn")
@@ -387,7 +473,47 @@ async def start_combat(ctx):
                         print(f"{monster.name} has been killed with health: {monster.health}")
                         mons.remove(monster)
                         await ctx.send(f"You killed {monster.name}! This is a small win but keep your head in the fight!")
-    await ctx.send(f"You've killed all of the monsters! You cleared the dungeon!")
+
+    for material in list_of_materials:
+        if (loot.count(material) > 0):
+            loot_count.update({f"{material}": loot.count(material)})
+        else:
+            continue
+    print(loot_count)
+    for key, value in loot_count.items():
+        print(f"this is key: {key} and value: {value}")
+        if value > 1 and key == 'raw_salmon':
+            material_text.append(f"{value} {key.replace('_', ' ')}")
+        elif value > 1 and key != 'raw_salmon':
+            material_text.append(f"{value} {key.replace('_', ' ')}s")
+        else:
+            material_text.append(f"{value} {key.replace('_', ' ')}")
+
+    for key, value in loot_count.items():
+        print(f"{value} = {vars(client.home).get(key)} + {value}")
+        value += vars(client.home).get(key)
+        print(f"this is the new value: {value}")
+        loot_count[key] = value
+    print(client.characters[0])
+    await update_home(client.home.home_name, loot_count, dungeon_owner)
+    for player in client.characters:
+        home = await select_char_home(player.player_name, player.character_name)
+        if home.home_name == client.home.home_name:
+            print(f"set client.home to {home}")
+            client.home = home
+            break
+        else:
+            continue
+    await ctx.send("You've been awarded the following loot for winning the fight!")
+    await ctx.send('\n'.join(x for x in material_text))
+
+    # await ctx.send(f"You've killed all of the monsters! You cleared the dungeon! You've been awarded {f", {str(item.value)} ".join(str(item.key.replace('_', ' ')) for item in loot_count)}!")
+    # give loot here
+    # how will I keep track of the loot? database...
+    # a player owns a base? a group owns a base?
+    # when loot is earned by a group is automatically added to the base inventory
+    # at the end of the dungeon list all of the loot gathered from all of the rooms
+
     client.dungeons[len(client.dungeons) - 1].rooms[client.dungeon_room].monsters = []
 
 # @client.command()

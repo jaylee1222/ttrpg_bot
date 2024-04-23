@@ -6,9 +6,10 @@ from models.DungeonRoom import DungeonRoom
 
 @asyncinit
 class Dungeon:
-    async def __init__(self, size) -> None:
+    async def __init__(self, size, player_owner) -> None:
         self.biome = await self.choose_biome()
         self.size = size
+        self.player_owner = player_owner
         self.room_mons = await self.populate_dungeon()
         self.rooms = await self.populate_rooms()
 
@@ -16,6 +17,7 @@ class Dungeon:
         rooms = []
         for mons in self.room_mons:
             room = DungeonRoom()
+            room.building_mat_loot = await room.generate_building_mat_loot(self.biome, mons)
             if mons == 1:
                 monster = await create_single_monster(self)
                 print(f"this is the monster: {monster}")

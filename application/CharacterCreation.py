@@ -1,11 +1,24 @@
 import asyncio
 import random
+from Database import check_for_homes
 
 response_timeout = 10.0
 async def get_name_response(client, ctx):
     def check(m):
         print(m.content)
         return isinstance(m.content, str)
+    try:
+        response = await client.wait_for('message', check=check, timeout=response_timeout)
+        print(response.content)
+        return response.content
+    except asyncio.TimeoutError:
+        return await ctx.send(f'Sorry, you took too long to answer.')
+    
+async def get_home_response(client, ctx):
+    def check(m):
+        print(m.content)
+        name_exists = True if check_for_homes(str(m.content)) else False
+        return isinstance(m.content, str) and name_exists
     try:
         response = await client.wait_for('message', check=check, timeout=response_timeout)
         print(response.content)
